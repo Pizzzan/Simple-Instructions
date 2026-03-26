@@ -1,0 +1,41 @@
+{
+	"schemaVersion": 1,
+	"id": "simple_instructions",
+	"version": "${version}",
+	"name": "Simple Instructions",
+	"description": "A Fabric mod for Minecraft 1.20.1.",
+	"authors": [
+		"yasha"
+	],
+	"contact": {},
+	"license": "All-Rights-Reserved",
+	"icon": "assets/simple_instructions/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.yasha.simple_instructions.SimpleInstructionsClient"
+		],
+		"fabric-datagen": [
+			"com.yasha.simple_instructions.SimpleInstructionsDataGenerator"
+		],
+		"modmenu": [
+			"com.yasha.simple_instructions.ModMenuIntegration"
+		]
+	},
+	"mixins": [
+		"simple_instructions.mixins.json",
+		{
+			"config": "simple_instructions.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.16.10",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"modmenu": "*"
+	}
+}

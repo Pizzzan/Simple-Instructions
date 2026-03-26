@@ -1,0 +1,32 @@
+{
+	"id": "default",
+	"instructions": [
+		{
+			"id": "welcome",
+			"title": "Welcome!",
+			"description": "Your adventure begins now...",
+			"actionType": "WAIT_DURATION",
+			"targetKey": "none",
+			"requiredCount": 60,
+			"icon": "minecraft:book"
+		},
+		{
+			"id": "open_inventory",
+			"title": "Open Your Inventory",
+			"description": "Press E to open your inventory",
+			"actionType": "KEY_PRESS",
+			"targetKey": "inventory",
+			"requiredCount": 1,
+			"icon": "minecraft:chest"
+		},
+		{
+			"id": "ready",
+			"title": "You're Ready!",
+			"description": "Click to continue",
+			"actionType": "DISMISS",
+			"targetKey": "none",
+			"requiredCount": 1,
+			"icon": "minecraft:diamond"
+		}
+	]
+}
