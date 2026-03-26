@@ -1,4 +1,4 @@
-package com.yasha.simple_instructions;
+package com.krimitt.simple_instructions;
 
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;

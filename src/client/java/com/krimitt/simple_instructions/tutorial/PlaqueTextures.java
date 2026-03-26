@@ -1,6 +1,6 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
-import com.yasha.simple_instructions.SimpleInstructions;
+import com.krimitt.simple_instructions.SimpleInstructions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
@@ -15,11 +15,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Manages plaque texture presets — built-in (generated at runtime) and custom (loaded from config folder).
- * Built-in presets: "default", "dark", "wooden", "clean" (solid mode — no texture).
- * Custom presets: any PNG dropped into config/simple_instructions/textures/
- */
+
 public class PlaqueTextures {
 	public static final Path CUSTOM_DIR = FabricLoader.getInstance().getConfigDir()
 		.resolve("simple_instructions").resolve("textures");
@@ -38,11 +34,7 @@ public class PlaqueTextures {
 
 	private static boolean initialized = false;
 
-	/**
-	 * Ensures textures are loaded. Safe to call multiple times — only runs once.
-	 * Must be called from the render thread (after OpenGL context is ready),
-	 * NOT during onInitializeClient().
-	 */
+	
 	public static void init() {
 		if (initialized) return;
 		if (MinecraftClient.getInstance().getTextureManager() == null) return;
@@ -65,10 +57,7 @@ public class PlaqueTextures {
 		scanCustomFolder();
 	}
 
-	/**
-	 * Rescan custom textures folder. Unregisters old custom textures and loads new ones.
-	 * Can be called at any time after init.
-	 */
+	
 	public static void reload() {
 		if (!initialized) {
 			init();
@@ -127,9 +116,7 @@ public class PlaqueTextures {
 		return new int[]{DEFAULT_TEX_SIZE, DEFAULT_TEX_SIZE};
 	}
 
-	/**
-	 * Whether the given preset uses solid rendering (no texture).
-	 */
+	
 	public static boolean isSolidMode(String name) {
 		return "clean".equals(name);
 	}
@@ -176,7 +163,7 @@ public class PlaqueTextures {
 
 		paintNineSlice(img, borderOuter, borderMid, borderInner, fill);
 
-		// Add simple wood grain lines
+		
 		int grain = abgr(255, 0x78, 0x5A, 0x35);
 		for (int y = BORDER + 2; y < DEFAULT_TEX_SIZE - BORDER - 2; y += 4) {
 			for (int x = BORDER; x < DEFAULT_TEX_SIZE - BORDER; x++) {
@@ -256,10 +243,7 @@ public class PlaqueTextures {
 		}
 	}
 
-	/**
-	 * Exports a template PNG with labeled regions to the custom textures folder.
-	 * Returns the path to the exported file.
-	 */
+	
 	public static Path exportTemplate() throws IOException {
 		Files.createDirectories(CUSTOM_DIR);
 		Path out = CUSTOM_DIR.resolve("_template.png");

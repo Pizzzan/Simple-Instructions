@@ -1,6 +1,6 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
-import com.yasha.simple_instructions.SimpleInstructions;
+import com.krimitt.simple_instructions.SimpleInstructions;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;

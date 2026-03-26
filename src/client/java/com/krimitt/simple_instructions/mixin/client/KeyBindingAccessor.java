@@ -1,4 +1,4 @@
-package com.yasha.simple_instructions.mixin.client;
+package com.krimitt.simple_instructions.mixin.client;
 
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;

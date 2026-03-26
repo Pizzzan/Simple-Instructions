@@ -1,4 +1,4 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;

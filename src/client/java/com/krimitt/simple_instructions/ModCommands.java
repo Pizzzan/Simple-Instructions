@@ -1,10 +1,10 @@
-package com.yasha.simple_instructions;
+package com.krimitt.simple_instructions;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.yasha.simple_instructions.tutorial.CompletionPersistence;
-import com.yasha.simple_instructions.tutorial.InstructionManager;
-import com.yasha.simple_instructions.tutorial.ModConfig;
-import com.yasha.simple_instructions.tutorial.PlaqueEditorScreen;
+import com.krimitt.simple_instructions.tutorial.CompletionPersistence;
+import com.krimitt.simple_instructions.tutorial.InstructionManager;
+import com.krimitt.simple_instructions.tutorial.ModConfig;
+import com.krimitt.simple_instructions.tutorial.PlaqueEditorScreen;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;

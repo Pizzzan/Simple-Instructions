@@ -1,7 +1,10 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
-import com.yasha.simple_instructions.SimpleInstructions;
-import com.yasha.simple_instructions.mixin.client.KeyBindingAccessor;
+import com.krimitt.simple_instructions.SimpleInstructions;
+import com.krimitt.simple_instructions.mixin.client.KeyBindingAccessor;
+import com.krimitt.simple_instructions.tutorial.ActionType;
+import com.krimitt.simple_instructions.tutorial.InstructionStep;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.sound.PositionedSoundInstance;
@@ -41,9 +44,7 @@ public class InstructionManager {
 	private InstructionManager() {
 	}
 
-	// ============================================================
-	// Start methods
-	// ============================================================
+	
 
 	public void onWorldJoin() {
 		if (!ModConfig.isTutorialEnabled() || !ModConfig.isShowOnWorldJoin()) return;
@@ -60,7 +61,7 @@ public class InstructionManager {
 		this.steps = new ArrayList<>(loaded);
 		this.currentSetId = setId;
 
-		// Resume from saved progress (if any)
+		
 		int savedIndex = CompletionPersistence.loadCurrentStep();
 		if (savedIndex > 0 && savedIndex < loaded.size()) {
 			this.currentIndex = savedIndex;
@@ -74,10 +75,7 @@ public class InstructionManager {
 		this.testSingleStep = false;
 	}
 
-	/**
-	 * Start a test run from the beginning (or from a specific step).
-	 * When done or aborted, calls onComplete.
-	 */
+	
 	public void startTest(int fromStep, boolean singleStep, Runnable onComplete) {
 		List<InstructionStep> loaded = ModConfig.getSteps();
 		if (loaded.isEmpty() || fromStep < 0 || fromStep >= loaded.size()) return;
@@ -129,9 +127,7 @@ public class InstructionManager {
 		if (cb != null) cb.run();
 	}
 
-	// ============================================================
-	// Tick
-	// ============================================================
+	
 
 	public void tick() {
 		if (pendingStart) {
@@ -261,7 +257,7 @@ public class InstructionManager {
 
 	private void advanceOrFinish() {
 		if (testSingleStep) {
-			// Single step test — done
+			
 			active = false;
 			state = AnimationState.DONE;
 			Runnable cb = onTestComplete;
@@ -277,7 +273,7 @@ public class InstructionManager {
 			progressCount = 0;
 			wasKeyDown = false;
 			transitionTo(AnimationState.SLIDING_IN);
-			// Save progress for real runs
+			
 			if (!testMode) {
 				CompletionPersistence.saveCurrentStep(currentIndex);
 			}
@@ -321,9 +317,7 @@ public class InstructionManager {
 		client.getSoundManager().play(currentSound);
 	}
 
-	// ============================================================
-	// Queries
-	// ============================================================
+	
 
 	public boolean isActive() { return active; }
 	public boolean isTestMode() { return testMode; }

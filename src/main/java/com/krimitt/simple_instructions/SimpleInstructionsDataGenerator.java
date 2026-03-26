@@ -1,4 +1,4 @@
-package com.yasha.simple_instructions;
+package com.krimitt.simple_instructions;
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;

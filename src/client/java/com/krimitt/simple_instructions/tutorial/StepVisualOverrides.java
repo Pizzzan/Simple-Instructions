@@ -1,4 +1,4 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;

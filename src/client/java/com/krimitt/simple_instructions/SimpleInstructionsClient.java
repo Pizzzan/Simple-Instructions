@@ -1,9 +1,9 @@
-package com.yasha.simple_instructions;
+package com.krimitt.simple_instructions;
 
-import com.yasha.simple_instructions.tutorial.InstructionManager;
-import com.yasha.simple_instructions.tutorial.InstructionRenderer;
-import com.yasha.simple_instructions.tutorial.ModConfig;
-import com.yasha.simple_instructions.tutorial.PlaqueEditorScreen;
+import com.krimitt.simple_instructions.tutorial.InstructionManager;
+import com.krimitt.simple_instructions.tutorial.InstructionRenderer;
+import com.krimitt.simple_instructions.tutorial.ModConfig;
+import com.krimitt.simple_instructions.tutorial.PlaqueEditorScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;

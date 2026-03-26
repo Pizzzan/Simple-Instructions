@@ -1,5 +1,7 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
+import com.krimitt.simple_instructions.tutorial.ActionType;
+import com.krimitt.simple_instructions.tutorial.InstructionStep;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
@@ -20,7 +22,7 @@ public class InstructionRenderer implements HudRenderCallback {
 	private static final int PROGRESS_BAR_HEIGHT = 2;
 
 
-	// 3D beveled border colors (raised look — matching vanilla advancement toast)
+	
 	// Outer dark edge
 	private static final int BORDER_OUTER = 0xFF1C1810;
 	// Bevel layer 1 (outermost bevel ring — dark bronze)
@@ -75,7 +77,7 @@ public class InstructionRenderer implements HudRenderCallback {
 
 		float anim = mgr.getAnimationProgress();
 
-		// Per-step visual overrides
+		
 		StepVisualOverrides overrides = ModConfig.getOverridesForStep(step.getId());
 
 		int plaqueWidth = overrides.resolvePlaqueWidth();
@@ -86,7 +88,7 @@ public class InstructionRenderer implements HudRenderCallback {
 		float centerX = anchorX;
 		float centerY = y + BASE_HEIGHT / 2f;
 
-		// Opacity
+		
 		float opacity = 1.0f;
 		if (state == AnimationState.SLIDING_IN) {
 			opacity = Math.min(1f, anim / 0.3f);
@@ -149,7 +151,7 @@ public class InstructionRenderer implements HudRenderCallback {
 
 		int screenHeight = client.getWindow().getScaledHeight();
 
-		// Test mode overlay
+		
 		if (mgr.isTestMode()) {
 			String testLabel = "TEST MODE \u2014 Press ESC to exit";
 			int tw = textRenderer.getWidth(testLabel);
@@ -159,7 +161,7 @@ public class InstructionRenderer implements HudRenderCallback {
 			drawContext.drawTextWithShadow(textRenderer, testLabel, tx, ty, 0xFFFF55);
 		}
 
-		// Skip button (below plaque, only when skippable and not in test mode)
+		
 		if (!mgr.isTestMode() && ModConfig.isSkippable() && state == AnimationState.WAITING) {
 			float skipScale = overrides.resolvePlaqueScale() / 100f;
 			int scaledW = (int) (plaqueWidth * skipScale);
@@ -187,7 +189,6 @@ public class InstructionRenderer implements HudRenderCallback {
 
 	/**
 	 * Draws the parchment background — either using a nine-slice texture or solid color layers.
-	 * @param style plaque style preset name (or null to use global config)
 	 */
 	public static void drawParchmentBackground(DrawContext ctx, int x, int y, int w, int h, float opacity, int bgColorRgb, @Nullable String style) {
 		String resolvedStyle = style != null ? style : ModConfig.getPlaqueStyle();
@@ -245,7 +246,7 @@ public class InstructionRenderer implements HudRenderCallback {
 	private static void drawNineSliceBackground(DrawContext ctx, int x, int y, int w, int h, float opacity, Identifier texture, int bgColorRgb, String style) {
 		int b = ModConfig.getNineSliceBorder();
 
-		// Look up actual texture dimensions for this style
+		
 		int[] texSize = PlaqueTextures.getTextureSize(style);
 		int ts = texSize[0];
 		int tsH = texSize[1];
@@ -254,7 +255,7 @@ public class InstructionRenderer implements HudRenderCallback {
 		RenderSystem.defaultBlendFunc();
 		float alpha = Math.max(0.02f, opacity);
 
-		// Apply background color as a tint via shader color
+		
 		int defaultBg = 0xC6A050;
 		if (bgColorRgb != defaultBg) {
 			float r = ((bgColorRgb >> 16) & 0xFF) / 255f;
@@ -266,46 +267,46 @@ public class InstructionRenderer implements HudRenderCallback {
 			RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
 		}
 
-		// Proportional scaling: scale texture so its height matches plaque height
+		
 		float vScale = (float) h / tsH;
-		int cb = Math.max(1, Math.round(b * vScale)); // rendered border in screen pixels
+		int cb = Math.max(1, Math.round(b * vScale)); 
 		if (cb * 2 > w) cb = w / 2;
 		if (cb * 2 > h) cb = h / 2;
 
 		int innerW = w - cb * 2;
 		int innerH = h - cb * 2;
-		int texInnerW = ts - b * 2;  // source inner width in texels
-		int texInnerH = tsH - b * 2; // source inner height in texels
+		int texInnerW = ts - b * 2;  
+		int texInnerH = tsH - b * 2; 
 
-		// Screen size of one full tile (proportionally scaled)
+		
 		int tileScrW = Math.max(1, Math.round(texInnerW * vScale));
 		int tileScrH = Math.max(1, Math.round(texInnerH * vScale));
 
-		// --- Corners (scaled proportionally) ---
+		
 		ctx.drawTexture(texture, x, y, cb, cb, 0, 0, b, b, ts, tsH);
 		ctx.drawTexture(texture, x + w - cb, y, cb, cb, ts - b, 0, b, b, ts, tsH);
 		ctx.drawTexture(texture, x, y + h - cb, cb, cb, 0, tsH - b, b, b, ts, tsH);
 		ctx.drawTexture(texture, x + w - cb, y + h - cb, cb, cb, ts - b, tsH - b, b, b, ts, tsH);
 
-		// --- Edges (tiled at proportional scale) ---
+		
 		if (innerW > 0) {
-			// Top edge
+			
 			drawTiledScaled(ctx, texture, x + cb, y, innerW, cb,
 				b, 0, texInnerW, b, tileScrW, cb, ts, tsH);
-			// Bottom edge
+			
 			drawTiledScaled(ctx, texture, x + cb, y + h - cb, innerW, cb,
 				b, tsH - b, texInnerW, b, tileScrW, cb, ts, tsH);
 		}
 		if (innerH > 0) {
-			// Left edge
+			
 			drawTiledScaled(ctx, texture, x, y + cb, cb, innerH,
 				0, b, b, texInnerH, cb, tileScrH, ts, tsH);
-			// Right edge
+			
 			drawTiledScaled(ctx, texture, x + w - cb, y + cb, cb, innerH,
 				ts - b, b, b, texInnerH, cb, tileScrH, ts, tsH);
 		}
 
-		// --- Center (tiled at proportional scale) ---
+		
 		if (innerW > 0 && innerH > 0) {
 			drawTiledScaled(ctx, texture, x + cb, y + cb, innerW, innerH,
 				b, b, texInnerW, texInnerH, tileScrW, tileScrH, ts, tsH);

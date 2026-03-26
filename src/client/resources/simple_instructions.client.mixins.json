@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "com.yasha.simple_instructions.mixin.client",
+	"package": "com.krimitt.simple_instructions.mixin.client",
 	"compatibilityLevel": "JAVA_17",
 	"client": [
 		"KeyBindingAccessor"

@@ -1,10 +1,13 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.yasha.simple_instructions.SimpleInstructions;
+import com.krimitt.simple_instructions.SimpleInstructions;
+import com.krimitt.simple_instructions.tutorial.ActionType;
+import com.krimitt.simple_instructions.tutorial.InstructionStep;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;

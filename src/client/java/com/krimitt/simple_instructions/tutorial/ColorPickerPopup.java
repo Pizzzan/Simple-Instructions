@@ -1,4 +1,4 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -28,7 +28,7 @@ public class ColorPickerPopup extends Screen {
 	private final IntConsumer onColorPicked;
 	private TextFieldWidget hexField;
 
-	// Panel position (computed in init)
+	
 	private int px, py;
 
 	public ColorPickerPopup(Screen parent, int initialColor, IntConsumer onColorPicked) {
@@ -85,14 +85,14 @@ public class ColorPickerPopup extends Screen {
 
 	@Override
 	public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-		// Dark overlay
+		
 		ctx.fill(0, 0, width, height, 0xCC000000);
 
-		// Panel background
+		
 		ctx.fill(px - 2, py - 2, px + PANEL_W + 2, py + PANEL_H + 2, 0xFF555555);
 		ctx.fill(px, py, px + PANEL_W, py + PANEL_H, 0xFF1A1A1A);
 
-		// Title
+		
 		ctx.drawCenteredTextWithShadow(textRenderer, "Pick a Color", px + PANEL_W / 2, py + 4, 0xFFFFDD00);
 
 		// Current color preview
@@ -133,17 +133,17 @@ public class ColorPickerPopup extends Screen {
 		int hueX = px + 10, hueY = py + 18, hueW = 180, hueH = 14;
 		int svX = px + 10, svY = py + 38, svW = 180, svH = 110;
 
-		// Hue bar
+		
 		for (int i = 0; i < hueW; i++) {
 			float h = (float) i / hueW;
 			int c = hsvToRgb(h, 1f, 1f);
 			ctx.fill(hueX + i, hueY, hueX + i + 1, hueY + hueH, 0xFF000000 | c);
 		}
-		// Hue marker
+		
 		int hueMarkerX = hueX + (int) (hue * hueW);
 		ctx.fill(hueMarkerX - 1, hueY - 1, hueMarkerX + 1, hueY + hueH + 1, 0xFFFFFFFF);
 
-		// SV square
+		
 		int blockSize = 4;
 		for (int sy = 0; sy < svH; sy += blockSize) {
 			for (int sx = 0; sx < svW; sx += blockSize) {
@@ -156,7 +156,7 @@ public class ColorPickerPopup extends Screen {
 				ctx.fill(bx, by, bx2, by2, 0xFF000000 | c);
 			}
 		}
-		// SV crosshair
+		
 		int svMarkerX = svX + (int) (sat * svW);
 		int svMarkerY = svY + (int) ((1f - val) * svH);
 		ctx.fill(svMarkerX - 4, svMarkerY, svMarkerX + 4, svMarkerY + 1, 0xFFFFFFFF);
@@ -281,7 +281,7 @@ public class ColorPickerPopup extends Screen {
 		return Math.max(min, Math.min(max, v));
 	}
 
-	// Generate 100-color grid covering the spectrum + grayscale
+	
 	private static int[] generateColorGrid() {
 		int[] colors = new int[100];
 		// Row 0: grayscale (10 shades)
@@ -289,21 +289,21 @@ public class ColorPickerPopup extends Screen {
 			int v = (int) (i / 9f * 255);
 			colors[i] = (v << 16) | (v << 8) | v;
 		}
-		// Rows 1-9: hue spectrum at varying saturation/brightness
+		
 		for (int row = 1; row < 10; row++) {
 			for (int col = 0; col < 10; col++) {
 				float h = col / 10f;
 				float s, v;
 				if (row <= 3) {
-					// Light/pastel colors (high value, varying saturation)
+					
 					s = (row) / 3f * 0.6f;
 					v = 1f;
 				} else if (row <= 6) {
-					// Full saturation, varying hue
+					
 					s = 0.8f + (row - 4) * 0.067f;
 					v = 1f - (row - 4) * 0.1f;
 				} else {
-					// Dark/deep colors
+					
 					s = 0.9f;
 					v = 0.7f - (row - 7) * 0.15f;
 				}

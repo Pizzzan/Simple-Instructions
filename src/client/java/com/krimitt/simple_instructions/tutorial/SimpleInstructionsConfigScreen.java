@@ -1,4 +1,4 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -22,14 +22,14 @@ public class SimpleInstructionsConfigScreen extends Screen {
 	private Tab currentTab = Tab.GENERAL;
 	private final List<LabelInfo> labels = new ArrayList<>();
 
-	// Color tab state
+	
 	private int activeColorRow = 0;
 	private final IntConsumer[] colorSetters = new IntConsumer[5];
 	private final TextFieldWidget[] colorFields = new TextFieldWidget[5];
 	private int swatchScroll = 0;
-	private int swatchGridY = 0; // computed in buildColorsTab
+	private int swatchGridY = 0; 
 
-	// Timed button messages
+	
 	private final List<TimedMsg> timedMsgs = new ArrayList<>();
 	private record TimedMsg(ButtonWidget btn, Text original, long resetAt) {}
 

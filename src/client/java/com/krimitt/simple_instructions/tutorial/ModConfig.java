@@ -1,7 +1,10 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
 import com.google.gson.*;
-import com.yasha.simple_instructions.SimpleInstructions;
+import com.krimitt.simple_instructions.SimpleInstructions;
+import com.krimitt.simple_instructions.tutorial.ActionType;
+import com.krimitt.simple_instructions.tutorial.InstructionStep;
+
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
@@ -70,7 +73,7 @@ public class ModConfig {
 			String json = Files.readString(CONFIG_FILE);
 			JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
 
-			// Graceful migration: load whatever fields exist, new fields keep defaults
+			
 
 			tutorialEnabled = getBool(obj, "tutorialEnabled", tutorialEnabled);
 			showOnWorldJoin = getBool(obj, "showOnWorldJoin", showOnWorldJoin);
@@ -100,7 +103,7 @@ public class ModConfig {
 			nineSliceBorder = getInt(obj, "nineSliceBorder", nineSliceBorder);
 			plaqueStyle = getStr(obj, "plaqueStyle", plaqueStyle);
 
-			// Load visual overrides
+			
 			if (obj.has("visualOverrides")) {
 				visualOverrides.clear();
 				JsonObject vo = obj.getAsJsonObject("visualOverrides");
@@ -109,7 +112,7 @@ public class ModConfig {
 				}
 			}
 
-			// Load steps
+			
 			if (obj.has("steps")) {
 				steps.clear();
 				JsonArray arr = obj.getAsJsonArray("steps");
@@ -127,7 +130,7 @@ public class ModConfig {
 					));
 				}
 			}
-			// Re-save to upgrade version number and add documentation comments
+			
 			save();
 		} catch (Exception e) {
 			SimpleInstructions.LOGGER.warn("Failed to load config", e);
@@ -234,7 +237,7 @@ public class ModConfig {
 		return obj.has(key) ? obj.get(key).getAsString() : def;
 	}
 
-	// --- Steps ---
+	
 	public static List<InstructionStep> getSteps() {
 		if (steps.isEmpty()) {
 			// Populate from default.json on first access (no auto-save — let user actions trigger saves)
@@ -270,7 +273,7 @@ public class ModConfig {
 		}
 	}
 
-	// --- Getters ---
+	
 	public static boolean isTutorialEnabled() { return tutorialEnabled; }
 	public static boolean isShowOnWorldJoin() { return showOnWorldJoin; }
 	public static boolean isSkippable() { return skippable; }
@@ -299,7 +302,7 @@ public class ModConfig {
 	public static int getNineSliceBorder() { return nineSliceBorder; }
 	public static String getPlaqueStyle() { return plaqueStyle; }
 
-	// --- Setters ---
+	
 	public static void setTutorialEnabled(boolean v) { tutorialEnabled = v; }
 	public static void setShowOnWorldJoin(boolean v) { showOnWorldJoin = v; }
 	public static void setSkippable(boolean v) { skippable = v; }
@@ -360,7 +363,7 @@ public class ModConfig {
 		save();
 	}
 
-	// --- Visual Overrides ---
+	
 	public static void clearOverrideField(java.util.function.Consumer<StepVisualOverrides> clearer) {
 		for (StepVisualOverrides o : visualOverrides.values()) {
 			clearer.accept(o);

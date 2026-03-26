@@ -1,5 +1,7 @@
-package com.yasha.simple_instructions.tutorial;
+package com.krimitt.simple_instructions.tutorial;
 
+import com.krimitt.simple_instructions.tutorial.ActionType;
+import com.krimitt.simple_instructions.tutorial.InstructionStep;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -177,7 +179,7 @@ public class PlaqueEditorScreen extends Screen {
 			}
 		}).dimensions(4 + (btnW + 1) * 3, btnY, btnW, 14).build());
 
-		// === Right panel: Step properties ===
+		
 		InstructionStep selected = getSelectedStep();
 		if (selected != null) {
 			int rx = centerX2 + 6;
@@ -372,17 +374,13 @@ public class PlaqueEditorScreen extends Screen {
 			.dimensions(bbX + (bbBtnW + bbGap) * 3, bottomBarY, bbBtnW, 20).build());
 	}
 
-	// ============================================================
-	// Rendering
-	// ============================================================
+	//rendering
 
 	@Override
 	public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
 		boolean isDragging = dragging || activeDragHandle >= 0;
 
-		// During drag with a world: show game HUD, no dark overlay so world is visible.
-		// During drag without a world (Mod Menu): still draw background to prevent trail artifacts.
-		// Not dragging: hide HUD, dark overlay.
+		
 		if (isDragging && client.world != null) {
 			client.options.hudHidden = wasHudHidden;
 		} else {
@@ -429,13 +427,13 @@ public class PlaqueEditorScreen extends Screen {
 			}
 		}
 
-		// --- Right panel background ---
+		
 		if (!iconPickerOpen && !isDragging) {
 			ctx.fill(centerX2, panelTop, width, panelBottom, 0x44000000);
 			ctx.drawTextWithShadow(tr, "Properties", centerX2 + 6, panelTop + 2, 0xFFFFDD00);
 		}
 
-		// Right panel labels (skip during drag and icon picker)
+		
 		InstructionStep selected = getSelectedStep();
 		if (!isDragging && !iconPickerOpen) {
 			if (selected != null) {
@@ -591,13 +589,13 @@ public class PlaqueEditorScreen extends Screen {
 			ctx.fill(screenCenterX, dy, screenCenterX + 1, Math.min(dy + 4, height), dashColor);
 		}
 
-		// Dashed horizontal line at plaque center
+		
 		int plaqueCenterY = sy + sh / 2;
 		for (int dx = centerX1; dx < centerX2; dx += 8) {
 			ctx.fill(dx, plaqueCenterY, Math.min(dx + 4, centerX2), plaqueCenterY + 1, 0x22FFFFFF);
 		}
 
-		// HUD mockup outlines
+		
 		int hudColor = 0x33FFFFFF;
 		int hotbarW = 182, hotbarH = 22;
 		int hotbarX = screenCenterX - hotbarW / 2;
@@ -702,9 +700,7 @@ public class PlaqueEditorScreen extends Screen {
 		}
 	}
 
-	// ============================================================
-	// Input handling
-	// ============================================================
+	
 
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -891,9 +887,7 @@ public class PlaqueEditorScreen extends Screen {
 		return super.keyPressed(keyCode, scanCode, modifiers);
 	}
 
-	// ============================================================
-	// Icon picker modal
-	// ============================================================
+	
 
 	private void renderIconPicker(DrawContext ctx, TextRenderer tr, int mouseX, int mouseY) {
 		ctx.fill(0, 0, width, height, 0xCC000000);
@@ -968,9 +962,7 @@ public class PlaqueEditorScreen extends Screen {
 		return mx >= px && mx <= px + pw && my >= py && my <= py + ph;
 	}
 
-	// ============================================================
-	// Context menu (inline edit)
-	// ============================================================
+	
 
 	private int getContextMenuRows() {
 		// Row 0: color pick, Row 1 (text targets): font, Row 2 (text targets): shadow, last: reset colors
@@ -1116,9 +1108,7 @@ public class PlaqueEditorScreen extends Screen {
 		client.setScreen(new ColorPickerPopup(this, currentColor, onPick));
 	}
 
-	// ============================================================
-	// Helpers
-	// ============================================================
+	
 
 	private void rebuildWidgets() {
 		clearChildren();

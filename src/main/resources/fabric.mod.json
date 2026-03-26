@@ -5,7 +5,7 @@
 	"name": "Simple Instructions",
 	"description": "A Fabric mod for Minecraft 1.20.1.",
 	"authors": [
-		"yasha"
+		"krimitt"
 	],
 	"contact": {},
 	"license": "All-Rights-Reserved",
@@ -13,13 +13,13 @@
 	"environment": "client",
 	"entrypoints": {
 		"client": [
-			"com.yasha.simple_instructions.SimpleInstructionsClient"
+			"com.krimitt.simple_instructions.SimpleInstructionsClient"
 		],
 		"fabric-datagen": [
-			"com.yasha.simple_instructions.SimpleInstructionsDataGenerator"
+			"com.krimitt.simple_instructions.SimpleInstructionsDataGenerator"
 		],
 		"modmenu": [
-			"com.yasha.simple_instructions.ModMenuIntegration"
+			"com.krimitt.simple_instructions.ModMenuIntegration"
 		]
 	},
 	"mixins": [
