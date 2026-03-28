@@ -21,35 +21,24 @@ public class InstructionRenderer implements HudRenderCallback {
 	private static final int BASE_HEIGHT = 44;
 	private static final int PROGRESS_BAR_HEIGHT = 2;
 
-
-	
-	// Outer dark edge
 	private static final int BORDER_OUTER = 0xFF1C1810;
-	// Bevel layer 1 (outermost bevel ring — dark bronze)
-	private static final int BEVEL1_HIGHLIGHT = 0xFF6C5420; // top/left
-	private static final int BEVEL1_SHADOW = 0xFF241808;    // bottom/right
-	// Bevel layer 2 (medium gold)
-	private static final int BEVEL2_HIGHLIGHT = 0xFF8C6C28; // top/left
-	private static final int BEVEL2_SHADOW = 0xFF382410;    // bottom/right
-	// Bevel layer 3 (bright gold)
-	private static final int BEVEL3_HIGHLIGHT = 0xFFB49038; // top/left
-	private static final int BEVEL3_SHADOW = 0xFF504018;    // bottom/right
-	// Thin bright inner edge (1px — brightest point of border)
-	private static final int INNER_HIGHLIGHT = 0xFFD4A840;  // top/left
-	private static final int INNER_SHADOW = 0xFF685020;     // bottom/right
+	private static final int BEVEL1_HIGHLIGHT = 0xFF6C5420;
+	private static final int BEVEL1_SHADOW = 0xFF241808;
+	private static final int BEVEL2_HIGHLIGHT = 0xFF8C6C28;
+	private static final int BEVEL2_SHADOW = 0xFF382410;
+	private static final int BEVEL3_HIGHLIGHT = 0xFFB49038;
+	private static final int BEVEL3_SHADOW = 0xFF504018;
+	private static final int INNER_HIGHLIGHT = 0xFFD4A840;
+	private static final int INNER_SHADOW = 0xFF685020;
 
-	// Icon frame colors (inset/recessed — opposite bevel direction)
-	private static final int ICON_OUTER = 0xFF1C1810;           // same as main outer
-	private static final int ICON_RING = 0xFF7C5C20;            // gold connecting border
-	private static final int ICON_INSET_SHADOW = 0xFF141008;    // top/left (dark = pushed in)
-	private static final int ICON_INSET_HIGHLIGHT = 0xFF4C3C18; // bottom/right (lighter = lit edge)
-	private static final int ICON_FILL = 0xFF141008;            // very dark fill
+	private static final int ICON_OUTER = 0xFF1C1810;
+	private static final int ICON_RING = 0xFF7C5C20;
+	private static final int ICON_INSET_SHADOW = 0xFF141008;
+	private static final int ICON_INSET_HIGHLIGHT = 0xFF4C3C18;
+	private static final int ICON_FILL = 0xFF141008;
 
-	// Progress bar background
 	private static final int BAR_BG = 0xFF302410;
 
-	// Available font types (ID → display label)
-	// Only built-in Minecraft fonts are guaranteed to work
 	public static final String[] FONT_TYPES = {
 		"default", "uniform", "alt"
 	};
@@ -59,7 +48,6 @@ public class InstructionRenderer implements HudRenderCallback {
 
 	@Override
 	public void onHudRender(DrawContext drawContext, float tickDelta) {
-		// Skip HUD rendering when editor is open
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (client.currentScreen instanceof PlaqueEditorScreen) return;
 
@@ -77,7 +65,6 @@ public class InstructionRenderer implements HudRenderCallback {
 
 		float anim = mgr.getAnimationProgress();
 
-		
 		StepVisualOverrides overrides = ModConfig.getOverridesForStep(step.getId());
 
 		int plaqueWidth = overrides.resolvePlaqueWidth();
@@ -88,7 +75,6 @@ public class InstructionRenderer implements HudRenderCallback {
 		float centerX = anchorX;
 		float centerY = y + BASE_HEIGHT / 2f;
 
-		
 		float opacity = 1.0f;
 		if (state == AnimationState.SLIDING_IN) {
 			opacity = Math.min(1f, anim / 0.3f);
@@ -128,7 +114,6 @@ public class InstructionRenderer implements HudRenderCallback {
 				step.getTitle(), step.getDescription(), iconId,
 				mgr.getProgress(), state, opacity, overrides, step.getActionType());
 
-		// White flash overlay
 		if (state == AnimationState.SLIDING_IN && ModConfig.isEnableFlash()) {
 			float flashIntensity;
 			if (anim < 0.25f) {
@@ -151,9 +136,8 @@ public class InstructionRenderer implements HudRenderCallback {
 
 		int screenHeight = client.getWindow().getScaledHeight();
 
-		
 		if (mgr.isTestMode()) {
-			String testLabel = "TEST MODE \u2014 Press ESC to exit";
+			String testLabel = "TEST MODE \u2014 Press Backspace to exit";
 			int tw = textRenderer.getWidth(testLabel);
 			int tx = screenWidth / 2 - tw / 2;
 			int ty = screenHeight - 14;
@@ -161,7 +145,6 @@ public class InstructionRenderer implements HudRenderCallback {
 			drawContext.drawTextWithShadow(textRenderer, testLabel, tx, ty, 0xFFFF55);
 		}
 
-		
 		if (!mgr.isTestMode() && ModConfig.isSkippable() && state == AnimationState.WAITING) {
 			float skipScale = overrides.resolvePlaqueScale() / 100f;
 			int scaledW = (int) (plaqueWidth * skipScale);
@@ -175,7 +158,6 @@ public class InstructionRenderer implements HudRenderCallback {
 			drawContext.drawTextWithShadow(textRenderer, skipLabel, skipX, skipY, 0x88AAAAAA);
 		}
 
-		// Step counter
 		String counter = "Step " + (mgr.getCurrentIndex() + 1) + "/" + mgr.getTotalSteps();
 		float counterScale = overrides.resolvePlaqueScale() / 100f;
 		int scaledW2 = (int) (plaqueWidth * counterScale);
@@ -187,9 +169,6 @@ public class InstructionRenderer implements HudRenderCallback {
 		drawContext.drawTextWithShadow(textRenderer, counter, counterX, counterY, 0x88AAAAAA);
 	}
 
-	/**
-	 * Draws the parchment background — either using a nine-slice texture or solid color layers.
-	 */
 	public static void drawParchmentBackground(DrawContext ctx, int x, int y, int w, int h, float opacity, int bgColorRgb, @Nullable String style) {
 		String resolvedStyle = style != null ? style : ModConfig.getPlaqueStyle();
 		if (PlaqueTextures.isSolidMode(resolvedStyle)) {
@@ -207,46 +186,25 @@ public class InstructionRenderer implements HudRenderCallback {
 	private static void drawSolidBackground(DrawContext ctx, int x, int y, int w, int h, float opacity, int bgColorRgb) {
 		int a = Math.max(4, (int) (opacity * 255));
 
-		// Layer 0: 1px dark outer edge
 		ctx.fill(x, y, x + w, y + h, applyAlpha(BORDER_OUTER, a));
-
-		// Layer 1: bevel ring 1 (per-side colors for 3D raised effect)
 		drawBevelRing(ctx, x + 1, y + 1, w - 2, h - 2, BEVEL1_HIGHLIGHT, BEVEL1_SHADOW, a);
-
-		// Layer 2: bevel ring 2
 		drawBevelRing(ctx, x + 2, y + 2, w - 4, h - 4, BEVEL2_HIGHLIGHT, BEVEL2_SHADOW, a);
-
-		// Layer 3: bevel ring 3
 		drawBevelRing(ctx, x + 3, y + 3, w - 6, h - 6, BEVEL3_HIGHLIGHT, BEVEL3_SHADOW, a);
-
-		// Layer 4: thin bright inner edge
 		drawBevelRing(ctx, x + 4, y + 4, w - 8, h - 8, INNER_HIGHLIGHT, INNER_SHADOW, a);
-
-		// Layer 5: main parchment fill
 		int fillColor = 0xFF000000 | bgColorRgb;
 		ctx.fill(x + 5, y + 5, x + w - 5, y + h - 5, applyAlpha(fillColor, a));
 	}
 
 	private static void drawBevelRing(DrawContext ctx, int x, int y, int w, int h, int highlight, int shadow, int alpha) {
-		// Top edge (highlight)
 		ctx.fill(x, y, x + w, y + 1, applyAlpha(highlight, alpha));
-		// Left edge (highlight)
 		ctx.fill(x, y + 1, x + 1, y + h, applyAlpha(highlight, alpha));
-		// Bottom edge (shadow)
 		ctx.fill(x, y + h - 1, x + w, y + h, applyAlpha(shadow, alpha));
-		// Right edge (shadow)
 		ctx.fill(x + w - 1, y + 1, x + w, y + h - 1, applyAlpha(shadow, alpha));
 	}
 
-	/**
-	 * Draws a nine-sliced texture background with proportionally-scaled tiled edges and center.
-	 * The texture is scaled so its height matches the plaque height, preserving visual proportions.
-	 * Corners are drawn scaled, edges and center are tiled at the proportional scale.
-	 */
 	private static void drawNineSliceBackground(DrawContext ctx, int x, int y, int w, int h, float opacity, Identifier texture, int bgColorRgb, String style) {
 		int b = ModConfig.getNineSliceBorder();
 
-		
 		int[] texSize = PlaqueTextures.getTextureSize(style);
 		int ts = texSize[0];
 		int tsH = texSize[1];
@@ -255,7 +213,7 @@ public class InstructionRenderer implements HudRenderCallback {
 		RenderSystem.defaultBlendFunc();
 		float alpha = Math.max(0.02f, opacity);
 
-		
+		//tint via shader color, normalized by max channel
 		int defaultBg = 0xC6A050;
 		if (bgColorRgb != defaultBg) {
 			float r = ((bgColorRgb >> 16) & 0xFF) / 255f;
@@ -267,46 +225,37 @@ public class InstructionRenderer implements HudRenderCallback {
 			RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
 		}
 
-		
 		float vScale = (float) h / tsH;
-		int cb = Math.max(1, Math.round(b * vScale)); 
+		int cb = Math.max(1, Math.round(b * vScale));
 		if (cb * 2 > w) cb = w / 2;
 		if (cb * 2 > h) cb = h / 2;
 
 		int innerW = w - cb * 2;
 		int innerH = h - cb * 2;
-		int texInnerW = ts - b * 2;  
-		int texInnerH = tsH - b * 2; 
+		int texInnerW = ts - b * 2;
+		int texInnerH = tsH - b * 2;
 
-		
 		int tileScrW = Math.max(1, Math.round(texInnerW * vScale));
 		int tileScrH = Math.max(1, Math.round(texInnerH * vScale));
 
-		
 		ctx.drawTexture(texture, x, y, cb, cb, 0, 0, b, b, ts, tsH);
 		ctx.drawTexture(texture, x + w - cb, y, cb, cb, ts - b, 0, b, b, ts, tsH);
 		ctx.drawTexture(texture, x, y + h - cb, cb, cb, 0, tsH - b, b, b, ts, tsH);
 		ctx.drawTexture(texture, x + w - cb, y + h - cb, cb, cb, ts - b, tsH - b, b, b, ts, tsH);
 
-		
 		if (innerW > 0) {
-			
 			drawTiledScaled(ctx, texture, x + cb, y, innerW, cb,
 				b, 0, texInnerW, b, tileScrW, cb, ts, tsH);
-			
 			drawTiledScaled(ctx, texture, x + cb, y + h - cb, innerW, cb,
 				b, tsH - b, texInnerW, b, tileScrW, cb, ts, tsH);
 		}
 		if (innerH > 0) {
-			
 			drawTiledScaled(ctx, texture, x, y + cb, cb, innerH,
 				0, b, b, texInnerH, cb, tileScrH, ts, tsH);
-			
 			drawTiledScaled(ctx, texture, x + w - cb, y + cb, cb, innerH,
 				ts - b, b, b, texInnerH, cb, tileScrH, ts, tsH);
 		}
 
-		
 		if (innerW > 0 && innerH > 0) {
 			drawTiledScaled(ctx, texture, x + cb, y + cb, innerW, innerH,
 				b, b, texInnerW, texInnerH, tileScrW, tileScrH, ts, tsH);
@@ -315,11 +264,6 @@ public class InstructionRenderer implements HudRenderCallback {
 		RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 	}
 
-	/**
-	 * Draws a texture region tiled at a proportional scale to fill the destination area.
-	 * Each full tile renders at (tileScrW x tileScrH) screen pixels from (srcW x srcH) source texels.
-	 * Partial tiles at edges are clipped proportionally.
-	 */
 	private static void drawTiledScaled(DrawContext ctx, Identifier texture,
 										 int destX, int destY, int destW, int destH,
 										 int srcX, int srcY, int srcW, int srcH,
@@ -342,11 +286,6 @@ public class InstructionRenderer implements HudRenderCallback {
 		}
 	}
 
-	/**
-	 * Draws the complete plaque content (background, icon, text, progress bar).
-	 * Used by both the HUD renderer and the visual editor for live preview.
-	 * @param overrides per-step visual overrides (nullable — falls back to global config)
-	 */
 	public static void drawPlaqueContent(DrawContext ctx, TextRenderer textRenderer,
 										  int x, int y, int w,
 										  String title, String description,
@@ -358,7 +297,6 @@ public class InstructionRenderer implements HudRenderCallback {
 		int alpha = Math.max(4, (int) (opacity * 255));
 		int alphaShift = alpha << 24;
 
-		// Resolve per-step overrides with global fallback
 		int bgColorRgb = overrides != null ? overrides.resolveBackgroundColor() : ModConfig.getBackgroundColor();
 		int titleColorRgb = overrides != null ? overrides.resolveTitleColor() : ModConfig.getTitleColor();
 		int descColorRgb = overrides != null ? overrides.resolveDescriptionColor() : ModConfig.getDescriptionColor();
@@ -366,12 +304,10 @@ public class InstructionRenderer implements HudRenderCallback {
 		boolean shadow = overrides != null ? overrides.resolveTextShadow() : ModConfig.isTextShadow();
 		String style = overrides != null ? overrides.resolvePlaqueStyle() : ModConfig.getPlaqueStyle();
 
-		// Background
 		int bgOpacityPct = ModConfig.getBackgroundOpacity();
 		float bgOpacity = opacity * bgOpacityPct / 100f;
 		drawParchmentBackground(ctx, x, y, w, h, bgOpacity, bgColorRgb, style);
 
-		// Icon
 		boolean hasIcon = iconId != null;
 		int iconOffset = 0;
 		if (hasIcon) {
@@ -400,7 +336,6 @@ public class InstructionRenderer implements HudRenderCallback {
 			} catch (Exception ignored) {}
 		}
 
-		// Text
 		int textAreaLeft = x + iconOffset + 4;
 		int textAreaRight = x + w - 4;
 		int textMaxWidth = textAreaRight - textAreaLeft;
@@ -408,11 +343,9 @@ public class InstructionRenderer implements HudRenderCallback {
 		int titleColor = titleColorRgb | alphaShift;
 		int descColor = descColorRgb | alphaShift;
 
-		// Font style
 		Identifier fontId = resolveFontId(font);
 		Style fontStyle = Style.EMPTY.withFont(fontId);
 
-		// Trim text to fit within text area
 		String trimmedTitle = title;
 		String trimmedDesc = description;
 		if (textRenderer.getWidth(title) > textMaxWidth) {
@@ -435,17 +368,19 @@ public class InstructionRenderer implements HudRenderCallback {
 			ctx.drawText(textRenderer, descText, textCenterX - descW / 2, y + 21, descColor, false);
 		}
 
-		// Progress bar / dismiss indicator
 		int barX = x + (hasIcon ? iconOffset : 6);
 		int barY = y + h - PROGRESS_BAR_HEIGHT - 4;
 		int barMaxWidth = w - (hasIcon ? iconOffset : 6) - 6;
 
 		if (actionType == ActionType.DISMISS) {
-			// No progress bar — show "Click to continue" hint
-			Text hintText = Text.literal("Click to continue").setStyle(fontStyle);
+			String hintStr = "Click to continue";
+			if (textRenderer.getWidth(hintStr) > textMaxWidth) {
+				hintStr = textRenderer.trimToWidth(hintStr, textMaxWidth - 6) + "..";
+			}
+			Text hintText = Text.literal(hintStr).setStyle(fontStyle);
 			int hintW = textRenderer.getWidth(hintText);
-			int hintX = textCenterX - hintW / 2;
-			int hintColor = (descColorRgb | alphaShift) & 0x88FFFFFF; // dimmer
+			int hintX = Math.max(textAreaLeft, textCenterX - hintW / 2);
+			int hintColor = (descColorRgb | alphaShift) & 0x88FFFFFF;
 			ctx.drawText(textRenderer, hintText, hintX, barY - 2, hintColor, shadow);
 		} else {
 			int barBgAlpha = Math.max(4, (int) (opacity * 0x88));

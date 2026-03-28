@@ -30,10 +30,8 @@ public class PlaqueEditorScreen extends Screen {
 	private static final int MIN_WIDTH = 160;
 	private static final int MAX_WIDTH = 320;
 
-	// Layout constants (computed from screen size in init)
 	private int leftW, rightW, centerX1, centerX2, panelTop, panelBottom;
 
-	// Icon items for the icon picker
 	private static final String[] ICON_ITEMS = {
 		"minecraft:book", "minecraft:compass", "minecraft:map", "minecraft:clock",
 		"minecraft:spyglass", "minecraft:torch", "minecraft:lantern", "minecraft:campfire",
@@ -66,37 +64,30 @@ public class PlaqueEditorScreen extends Screen {
 	private int selectedStepIndex = 0;
 	private int stepListScroll = 0;
 
-	// Drag state (plaque positioning)
 	private boolean dragging = false;
 	private int activeDragHandle = -1;
 	private int dragOffsetX, dragOffsetY;
 	private int resizeStartWidth, resizeStartScale;
 	private int resizeStartMouseX, resizeStartMouseY;
 
-	// Hover state
 	private boolean hoveringPlaque = false;
 	private int hoveringHandle = -1;
 	private boolean hoveringIcon = false;
 	private boolean wasHudHidden = false;
 	private boolean hudStateCaptured = false;
 
-	// Inline edit (right-click context menu on plaque)
-	private int hoveringRegion = -1; // -1=none, 0=title, 1=desc, 2=bg
+	private int hoveringRegion = -1;
 	private boolean contextMenuOpen = false;
 	private int contextMenuX, contextMenuY;
 	private int contextMenuTarget = -1;
 
-	// Icon picker modal
 	private boolean iconPickerOpen = false;
 	private int iconPickerScroll = 0;
 
-	// Key listening mode
 	private boolean listeningForKey = false;
 
-	// Right panel widgets
 	private TextFieldWidget titleField, descField, countField;
 
-	// Timed button messages
 	private final java.util.ArrayList<TimedMsg> timedMsgs = new java.util.ArrayList<>();
 	private record TimedMsg(ButtonWidget btn, Text original, long resetAt) {}
 
@@ -113,7 +104,6 @@ public class PlaqueEditorScreen extends Screen {
 
 	@Override
 	protected void init() {
-		// Hide HUD (hotbar, health) while editor is open — only capture once
 		if (client != null && !hudStateCaptured) {
 			hudStateCaptured = true;
 			wasHudHidden = client.options.hudHidden;
@@ -132,7 +122,6 @@ public class PlaqueEditorScreen extends Screen {
 			stepListScroll = Math.max(0, steps.size() - 1);
 		}
 
-		// === Layout computation ===
 		leftW = Math.max(100, (int) (width * 0.22));
 		rightW = Math.max(130, (int) (width * 0.25));
 		centerX1 = leftW;
@@ -141,7 +130,6 @@ public class PlaqueEditorScreen extends Screen {
 		panelBottom = height - 28;
 		int bottomBarY = height - 24;
 
-		// === Left panel: Step list ===
 		int btnY = panelBottom - 16;
 		int btnW = (leftW - 12) / 4;
 
@@ -179,7 +167,6 @@ public class PlaqueEditorScreen extends Screen {
 			}
 		}).dimensions(4 + (btnW + 1) * 3, btnY, btnW, 14).build());
 
-		
 		InstructionStep selected = getSelectedStep();
 		if (selected != null) {
 			int rx = centerX2 + 6;
@@ -187,7 +174,6 @@ public class PlaqueEditorScreen extends Screen {
 			int ry = panelTop + 24;
 			int rowH = 22;
 
-			// Title
 			int labelW = textRenderer.getWidth("Title: ");
 			titleField = addDrawableChild(new TextFieldWidget(
 				textRenderer, rx + labelW, ry, rw - labelW, 14, Text.literal("Title")));
@@ -199,7 +185,6 @@ public class PlaqueEditorScreen extends Screen {
 			});
 			ry += rowH;
 
-			// Description
 			int descLabelW = textRenderer.getWidth("Desc: ");
 			descField = addDrawableChild(new TextFieldWidget(
 				textRenderer, rx + descLabelW, ry, rw - descLabelW, 14, Text.literal("Desc")));
@@ -211,7 +196,6 @@ public class PlaqueEditorScreen extends Screen {
 			});
 			ry += rowH;
 
-			// Icon button
 			String iconName = selected.getIcon() != null ? selected.getIcon().replace("minecraft:", "") : "none";
 			addDrawableChild(ButtonWidget.builder(Text.literal("Icon: " + iconName), btn -> {
 				iconPickerOpen = !iconPickerOpen;
@@ -219,7 +203,6 @@ public class PlaqueEditorScreen extends Screen {
 			}).dimensions(rx, ry, rw, 14).build());
 			ry += rowH + 4;
 
-			// Trigger type button
 			String typeLabel = getActionTypeLabel(selected.getActionType());
 			addDrawableChild(ButtonWidget.builder(Text.literal("Type: " + typeLabel), btn -> {
 				InstructionStep s = getSelectedStep();
@@ -227,9 +210,8 @@ public class PlaqueEditorScreen extends Screen {
 					ActionType[] types = ActionType.values();
 					int idx = s.getActionType().ordinal();
 					s.setActionType(types[(idx + 1) % types.length]);
-					// Set sensible defaults for new types
 					if (s.getActionType() == ActionType.WAIT_DURATION && s.getRequiredCount() < 20) {
-						s.setRequiredCount(60); // 3 seconds default
+						s.setRequiredCount(60);
 					}
 					ModConfig.save();
 					rebuildWidgets();
@@ -237,10 +219,8 @@ public class PlaqueEditorScreen extends Screen {
 			}).dimensions(rx, ry, rw, 14).build());
 			ry += rowH;
 
-			// Trigger-specific fields
 			ActionType aType = selected.getActionType();
 			if (aType == ActionType.KEY_PRESS || aType == ActionType.KEY_HOLD) {
-				// Key binding button
 				String keyDisplay = getKeyDisplayName(selected.getTargetKey());
 				addDrawableChild(ButtonWidget.builder(
 					Text.literal("Key: " + keyDisplay), btn -> {
@@ -249,7 +229,6 @@ public class PlaqueEditorScreen extends Screen {
 					}).dimensions(rx, ry, rw, 14).build());
 				ry += rowH;
 
-				// Required count
 				String countLabel = aType == ActionType.KEY_PRESS ? "Presses:" : "Hold ticks:";
 				countField = addDrawableChild(new TextFieldWidget(
 					textRenderer, rx + textRenderer.getWidth(countLabel) + 4, ry, rw - textRenderer.getWidth(countLabel) - 4, 14, Text.literal("Count")));
@@ -266,7 +245,6 @@ public class PlaqueEditorScreen extends Screen {
 				});
 				ry += rowH;
 			} else if (aType == ActionType.WAIT_DURATION) {
-				// Duration field (in ticks, 20 = 1 second)
 				String durLabel = "Ticks (20=1s):";
 				countField = addDrawableChild(new TextFieldWidget(
 					textRenderer, rx + textRenderer.getWidth(durLabel) + 4, ry, rw - textRenderer.getWidth(durLabel) - 4, 14, Text.literal("Duration")));
@@ -283,9 +261,6 @@ public class PlaqueEditorScreen extends Screen {
 				});
 				ry += rowH;
 			}
-			// DISMISS has no extra fields
-
-			// Texture style override
 			ry += 4;
 			StepVisualOverrides styleOv = ModConfig.getOverridesForStep(selected.getId());
 			String currentStyle = styleOv.resolvePlaqueStyle();
@@ -304,7 +279,6 @@ public class PlaqueEditorScreen extends Screen {
 			}).dimensions(rx, ry, rw, 14).build());
 		}
 
-		// === Center panel: Position/scale controls below preview ===
 		StepVisualOverrides initOv = getSelectedOverrides();
 		int ctrlY = panelBottom - 24;
 		int ctrlW = (centerX2 - centerX1 - 16) / 3;
@@ -333,7 +307,6 @@ public class PlaqueEditorScreen extends Screen {
 			rebuildWidgets();
 		}).dimensions(ctrlX + (ctrlW + 2) * 2, ctrlY, ctrlW, 20).build());
 
-		// === Bottom bar ===
 		int bbBtnW = 70;
 		int bbGap = 4;
 		int totalBbW = bbBtnW * 4 + bbGap * 3;
@@ -374,13 +347,10 @@ public class PlaqueEditorScreen extends Screen {
 			.dimensions(bbX + (bbBtnW + bbGap) * 3, bottomBarY, bbBtnW, 20).build());
 	}
 
-	//rendering
-
 	@Override
 	public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
 		boolean isDragging = dragging || activeDragHandle >= 0;
 
-		
 		if (isDragging && client.world != null) {
 			client.options.hudHidden = wasHudHidden;
 		} else {
@@ -390,13 +360,24 @@ public class PlaqueEditorScreen extends Screen {
 
 		TextRenderer tr = client.textRenderer;
 		List<InstructionStep> steps = ModConfig.getSteps();
+		InstructionStep selected = getSelectedStep();
 
-		// --- Left panel background ---
-		if (!iconPickerOpen && !isDragging) {
-			ctx.fill(0, panelTop, leftW, panelBottom, 0x44000000);
+		//plaque renders first so panels draw on top; during drag, panels are skipped
+		if (!iconPickerOpen && selected != null) {
+			renderPlaquePreview(ctx, tr, mouseX, mouseY, selected);
+		}
+
+		//flush batched text so panel fills draw on top
+		ctx.getVertexConsumers().draw();
+
+		if (isDragging) {
+			return;
+		}
+
+		if (!iconPickerOpen) {
+			ctx.fill(0, panelTop, leftW, panelBottom, 0xDD000000);
 			ctx.drawTextWithShadow(tr, "Steps", 5, panelTop + 2, 0xFFFFDD00);
 
-			// Step list entries
 			int stepEntryH = 18;
 			int listTop = panelTop + 14;
 			int listBottom = panelBottom - 20;
@@ -411,14 +392,12 @@ public class PlaqueEditorScreen extends Screen {
 				int bgColor = sel ? 0xAA335588 : (hover ? 0x44FFFFFF : 0);
 				if (bgColor != 0) ctx.fill(2, ey, leftW - 2, ey + stepEntryH - 1, bgColor);
 
-				// Step number + title
 				String label = (idx + 1) + ". " + step.getTitle();
 				int maxLabelW = leftW - 12;
 				if (tr.getWidth(label) > maxLabelW) label = tr.trimToWidth(label, maxLabelW - 8) + "..";
 				ctx.drawTextWithShadow(tr, label, 6, ey + 4, sel ? 0xFFFF88 : 0xCCCCCC);
 			}
 
-			// Step list scroll indicator
 			if (steps.size() > maxVisible) {
 				int barH = Math.max(6, (listBottom - listTop) * maxVisible / steps.size());
 				int maxScr = steps.size() - maxVisible;
@@ -427,26 +406,20 @@ public class PlaqueEditorScreen extends Screen {
 			}
 		}
 
-		
-		if (!iconPickerOpen && !isDragging) {
-			ctx.fill(centerX2, panelTop, width, panelBottom, 0x44000000);
+		if (!iconPickerOpen) {
+			ctx.fill(centerX2, panelTop, width, panelBottom, 0xDD000000);
 			ctx.drawTextWithShadow(tr, "Properties", centerX2 + 6, panelTop + 2, 0xFFFFDD00);
 		}
 
-		
-		InstructionStep selected = getSelectedStep();
-		if (!isDragging && !iconPickerOpen) {
+		if (!iconPickerOpen) {
 			if (selected != null) {
 				int rx = centerX2 + 6;
 				int ry = panelTop + 24;
 				int rowH = 22;
-				// Title label (inline, left of field)
 				ctx.drawTextWithShadow(tr, "Title:", rx, ry + 3, 0xAAAAAA);
 				ry += rowH;
-				// Desc label (inline, left of field)
 				ctx.drawTextWithShadow(tr, "Desc:", rx, ry + 3, 0xAAAAAA);
 
-				// If listening for key, show overlay text
 				if (listeningForKey) {
 					ctx.drawTextWithShadow(tr, ">> Press any key <<", rx, panelBottom - 34, 0xFFFF55);
 				}
@@ -455,27 +428,16 @@ public class PlaqueEditorScreen extends Screen {
 			}
 		}
 
-		// --- Center panel: Live plaque preview ---
-		if (!iconPickerOpen && selected != null) {
-			renderPlaquePreview(ctx, tr, mouseX, mouseY, selected);
-		}
-
-		// During drag: only show plaque + guides, skip all chrome
-		if (isDragging) {
-			return;
-		}
-
-		// --- Title bar ---
 		ctx.drawCenteredTextWithShadow(tr, title, width / 2, 4, 0xFFFFDD00);
 
-		// --- Bottom bar background ---
-		ctx.fill(0, height - 28, width, height, 0x66000000);
+		ctx.fill(0, height - 28, width, height, 0xFF1A1A1A);
 
-		// --- Widgets (skip when icon picker is open) ---
 		if (!iconPickerOpen) {
 			super.render(ctx, mouseX, mouseY, delta);
 
-			// Inline edit tooltip
+			ctx.getMatrices().push();
+			ctx.getMatrices().translate(0, 0, 200);
+
 			if (hoveringRegion >= 0 && !contextMenuOpen && !dragging && activeDragHandle < 0) {
 				String tip = switch (hoveringRegion) {
 					case 0 -> "Right-click: edit title style";
@@ -485,8 +447,9 @@ public class PlaqueEditorScreen extends Screen {
 				ctx.drawTextWithShadow(tr, tip, mouseX + 10, mouseY - 10, 0xFFFF88);
 			}
 
-			// Context menu
 			if (contextMenuOpen) renderContextMenu(ctx, tr, mouseX, mouseY);
+
+			ctx.getMatrices().pop();
 		} else {
 			renderIconPicker(ctx, tr, mouseX, mouseY);
 		}
@@ -508,7 +471,6 @@ public class PlaqueEditorScreen extends Screen {
 
 		updateHoverState(mouseX, mouseY, scaledX, scaledY, scaledW, scaledH);
 
-		// Draw plaque with scale transform
 		ctx.getMatrices().push();
 		float centerX = anchorX;
 		float centerY = py + PLAQUE_HEIGHT / 2f;
@@ -524,7 +486,6 @@ public class PlaqueEditorScreen extends Screen {
 			selectedStep.getTitle(), selectedStep.getDescription(), iconId,
 			0.6f, AnimationState.WAITING, 1.0f, overrides, selectedStep.getActionType());
 
-		// Inline edit region highlight
 		if (hoveringRegion >= 0 && !contextMenuOpen && !dragging && activeDragHandle < 0) {
 			int ioOff = (iconId != null) ? 28 : 0;
 			int textL = px + ioOff + 4;
@@ -540,7 +501,6 @@ public class PlaqueEditorScreen extends Screen {
 
 		ctx.getMatrices().pop();
 
-		// Selection outline + handles
 		if (hoveringPlaque || dragging || activeDragHandle >= 0 || hoveringHandle >= 0) {
 			drawHandles(ctx, scaledX, scaledY, scaledW, scaledH);
 		}
@@ -549,15 +509,10 @@ public class PlaqueEditorScreen extends Screen {
 			ctx.drawTextWithShadow(tr, "Click to change icon", mouseX + 8, mouseY - 8, 0xFFFF88);
 		}
 
-		// Positioning guidelines when dragging
 		if (dragging || activeDragHandle >= 0) {
 			drawPositioningGuides(ctx, tr, mouseX, mouseY, scaledX, scaledY, scaledW, scaledH);
 		}
 	}
-
-	// ============================================================
-	// Handle drawing & positioning guides
-	// ============================================================
 
 	private void drawHandles(DrawContext ctx, int sx, int sy, int sw, int sh) {
 		int oc = 0xAAFFFFFF;
@@ -583,19 +538,16 @@ public class PlaqueEditorScreen extends Screen {
 		int yPx = ov.resolvePositionY();
 		int screenCenterX = width / 2;
 
-		// Dashed vertical center line
 		int dashColor = (xPct == 50) ? 0x66FFFF00 : 0x33FFFFFF;
 		for (int dy = 0; dy < height; dy += 8) {
 			ctx.fill(screenCenterX, dy, screenCenterX + 1, Math.min(dy + 4, height), dashColor);
 		}
 
-		
 		int plaqueCenterY = sy + sh / 2;
 		for (int dx = centerX1; dx < centerX2; dx += 8) {
 			ctx.fill(dx, plaqueCenterY, Math.min(dx + 4, centerX2), plaqueCenterY + 1, 0x22FFFFFF);
 		}
 
-		
 		int hudColor = 0x33FFFFFF;
 		int hotbarW = 182, hotbarH = 22;
 		int hotbarX = screenCenterX - hotbarW / 2;
@@ -604,13 +556,11 @@ public class PlaqueEditorScreen extends Screen {
 		drawDashedRect(ctx, screenCenterX - 91, hotbarY - 12, 81, 9, hudColor);
 		drawDashedRect(ctx, screenCenterX + 10, hotbarY - 12, 81, 9, hudColor);
 
-		// Snap indicator
 		if (xPct == 50) {
 			ctx.fill(screenCenterX - 2, sy - 1, screenCenterX + 3, sy, 0xCCFFFF00);
 			ctx.fill(screenCenterX - 2, sy + sh, screenCenterX + 3, sy + sh + 1, 0xCCFFFF00);
 		}
 
-		// Live position readout
 		String readout = "X: " + xPct + "%  Y: " + yPx + "px";
 		int readoutX = mouseX + 14;
 		int readoutY = mouseY + 14;
@@ -671,7 +621,6 @@ public class PlaqueEditorScreen extends Screen {
 		hoveringPlaque = hoveringHandle < 0 && !hoveringIcon
 			&& mouseX >= sx && mouseX <= sx + sw && mouseY >= sy && mouseY <= sy + sh;
 
-		// Determine which plaque region is hovered (for inline editing)
 		hoveringRegion = -1;
 		if (hoveringPlaque) {
 			StepVisualOverrides ov = getSelectedOverrides();
@@ -700,8 +649,6 @@ public class PlaqueEditorScreen extends Screen {
 		}
 	}
 
-	
-
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 		if (iconPickerOpen) {
@@ -716,7 +663,6 @@ public class PlaqueEditorScreen extends Screen {
 			return true;
 		}
 
-		// Key listening - capture mouse button
 		if (listeningForKey && button <= 2) {
 			String keyName = switch (button) {
 				case 0 -> "attack";
@@ -732,7 +678,6 @@ public class PlaqueEditorScreen extends Screen {
 
 		if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
-		// Step list click
 		int stepEntryH = 18;
 		int listTop = panelTop + 14;
 		int listBottom = panelBottom - 20;
@@ -745,7 +690,6 @@ public class PlaqueEditorScreen extends Screen {
 			}
 		}
 
-		// Right-click on plaque region → open context menu
 		if (button == 1 && hoveringRegion >= 0) {
 			contextMenuOpen = true;
 			contextMenuTarget = hoveringRegion;
@@ -753,7 +697,6 @@ public class PlaqueEditorScreen extends Screen {
 			contextMenuY = (int) mouseY;
 			int menuW = 120;
 			int menuH = getContextMenuRows() * 16 + 4;
-			// Keep within center panel — don't overlap left/right panels or bottom bar
 			if (contextMenuX + menuW > centerX2) contextMenuX = centerX2 - menuW;
 			if (contextMenuX < leftW) contextMenuX = leftW;
 			if (contextMenuY + menuH > height - 28) contextMenuY = height - 28 - menuH;
@@ -887,8 +830,6 @@ public class PlaqueEditorScreen extends Screen {
 		return super.keyPressed(keyCode, scanCode, modifiers);
 	}
 
-	
-
 	private void renderIconPicker(DrawContext ctx, TextRenderer tr, int mouseX, int mouseY) {
 		ctx.fill(0, 0, width, height, 0xCC000000);
 
@@ -962,10 +903,7 @@ public class PlaqueEditorScreen extends Screen {
 		return mx >= px && mx <= px + pw && my >= py && my <= py + ph;
 	}
 
-	
-
 	private int getContextMenuRows() {
-		// Row 0: color pick, Row 1 (text targets): font, Row 2 (text targets): shadow, last: reset colors
 		return (contextMenuTarget <= 1) ? 4 : 2;
 	}
 
@@ -981,7 +919,6 @@ public class PlaqueEditorScreen extends Screen {
 		StepVisualOverrides ov = getSelectedOverrides();
 		int ry = my + 2;
 
-		// Row 0: Color picker
 		boolean hovered = mouseX >= mx && mouseX < mx + menuW && mouseY >= ry && mouseY < ry + rowH;
 		if (hovered) ctx.fill(mx + 1, ry, mx + menuW - 1, ry + rowH, 0x44FFFFFF);
 		String colorLabel;
@@ -1009,7 +946,6 @@ public class PlaqueEditorScreen extends Screen {
 				break;
 		}
 		ctx.drawTextWithShadow(tr, colorLabel, mx + 4, ry + 4, 0xCCCCCC);
-		// Default color swatch (dimmed) + current color swatch
 		if (previewColor != defaultColor) {
 			ctx.fill(mx + menuW - 30, ry + 4, mx + menuW - 21, ry + 12, 0xFF000000 | defaultColor);
 			ctx.drawTextWithShadow(tr, "\u00a77\u2192", mx + menuW - 21, ry + 3, 0xCCCCCC);
@@ -1018,13 +954,11 @@ public class PlaqueEditorScreen extends Screen {
 		ctx.fill(mx + menuW - 17, ry + 4, mx + menuW - 7, ry + 12, 0xFF000000 | previewColor);
 
 		if (contextMenuTarget <= 1) {
-			// Row 1: Font
 			ry = my + 2 + rowH;
 			hovered = mouseX >= mx && mouseX < mx + menuW && mouseY >= ry && mouseY < ry + rowH;
 			if (hovered) ctx.fill(mx + 1, ry, mx + menuW - 1, ry + rowH, 0x44FFFFFF);
 			ctx.drawTextWithShadow(tr, "Font: " + InstructionRenderer.fontLabel(ov.resolveFontType()), mx + 4, ry + 4, 0xCCCCCC);
 
-			// Row 2: Shadow
 			ry = my + 2 + rowH * 2;
 			hovered = mouseX >= mx && mouseX < mx + menuW && mouseY >= ry && mouseY < ry + rowH;
 			if (hovered) ctx.fill(mx + 1, ry, mx + menuW - 1, ry + rowH, 0x44FFFFFF);
@@ -1032,7 +966,6 @@ public class PlaqueEditorScreen extends Screen {
 			ctx.drawTextWithShadow(tr, "Shadow: " + (shadow ? "ON" : "OFF"), mx + 4, ry + 4, 0xCCCCCC);
 		}
 
-		// Last row: Reset Colors
 		ry = my + 2 + rowH * (rows - 1);
 		hovered = mouseX >= mx && mouseX < mx + menuW && mouseY >= ry && mouseY < ry + rowH;
 		if (hovered) ctx.fill(mx + 1, ry, mx + menuW - 1, ry + rowH, 0x44FFFFFF);
@@ -1072,7 +1005,6 @@ public class PlaqueEditorScreen extends Screen {
 			contextMenuOpen = false;
 			return true;
 		}
-		// Last row: Reset Colors
 		if (rowIdx == rows - 1) {
 			StepVisualOverrides ov = getSelectedOverrides();
 			ov.setTitleColor(null);
@@ -1108,8 +1040,6 @@ public class PlaqueEditorScreen extends Screen {
 		client.setScreen(new ColorPickerPopup(this, currentColor, onPick));
 	}
 
-	
-
 	private void rebuildWidgets() {
 		clearChildren();
 		init();
@@ -1130,7 +1060,7 @@ public class PlaqueEditorScreen extends Screen {
 
 	@Override
 	public void removed() {
-		// Always restore HUD when this screen goes away (close, test, etc.)
+		//always restore HUD state
 		client.options.hudHidden = wasHudHidden;
 	}
 

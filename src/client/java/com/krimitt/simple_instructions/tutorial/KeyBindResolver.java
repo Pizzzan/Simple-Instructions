@@ -22,7 +22,7 @@ public class KeyBindResolver {
             case "drop" -> opts.dropKey;
             case "chat" -> opts.chatKey;
             case "swap_hands" -> opts.swapHandsKey;
-            default -> null; // Unknown names — caller should handle raw key detection
+            default -> null;
         };
     }
 }

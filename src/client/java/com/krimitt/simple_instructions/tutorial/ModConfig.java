@@ -22,12 +22,10 @@ public class ModConfig {
 	private static final Path CONFIG_FILE = CONFIG_DIR.resolve("config.json");
 	private static final int CONFIG_VERSION = 3;
 
-	// --- General ---
 	private static boolean tutorialEnabled = true;
 	private static boolean showOnWorldJoin = true;
 	private static boolean skippable = true;
 
-	// --- Appearance ---
 	private static int plaqueWidth = 240;
 	private static int plaqueScale = 100;
 	private static int positionXPercent = 50;
@@ -36,35 +34,29 @@ public class ModConfig {
 	private static String defaultIconItem = "minecraft:book";
 	private static int backgroundOpacity = 100;
 	private static boolean textShadow = true;
-	private static String fontType = "default"; // "default" or "uniform"
+	private static String fontType = "default";
 
-	// --- Colors ---
 	private static int titleColor = 0xFFFFFF;
 	private static int descriptionColor = 0xFFDD00;
 	private static int barColor = 0x55AA22;
 	private static int barCompleteColor = 0x77CC44;
 	private static int backgroundColor = 0xC6A050;
 
-	// --- Render Mode ---
-	private static String renderMode = "texture"; // "solid" or "texture"
-	private static int nineSliceBorder = 8; // border size in pixels for nine-slice
-	private static String plaqueStyle = "default"; // texture preset name
+	private static String renderMode = "texture";
+	private static int nineSliceBorder = 8;
+	private static String plaqueStyle = "default";
 
-	// --- Animation ---
 	private static int revealDurationMs = 1000;
 	private static int dismissDurationMs = 400;
 	private static int completingDurationMs = 1000;
 	private static boolean enableFlash = true;
 	private static int flashIntensity = 90;
 
-	// --- Sound ---
 	private static boolean enableCompletionSound = true;
 	private static int soundVolume = 100;
 
-	// --- Per-Step Visual Overrides ---
 	private static Map<String, StepVisualOverrides> visualOverrides = new HashMap<>();
 
-	// --- Instruction Steps ---
 	private static List<InstructionStep> steps = new ArrayList<>();
 
 	public static void load() {
@@ -72,8 +64,6 @@ public class ModConfig {
 		try {
 			String json = Files.readString(CONFIG_FILE);
 			JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
-
-			
 
 			tutorialEnabled = getBool(obj, "tutorialEnabled", tutorialEnabled);
 			showOnWorldJoin = getBool(obj, "showOnWorldJoin", showOnWorldJoin);
@@ -103,7 +93,6 @@ public class ModConfig {
 			nineSliceBorder = getInt(obj, "nineSliceBorder", nineSliceBorder);
 			plaqueStyle = getStr(obj, "plaqueStyle", plaqueStyle);
 
-			
 			if (obj.has("visualOverrides")) {
 				visualOverrides.clear();
 				JsonObject vo = obj.getAsJsonObject("visualOverrides");
@@ -112,7 +101,6 @@ public class ModConfig {
 				}
 			}
 
-			
 			if (obj.has("steps")) {
 				steps.clear();
 				JsonArray arr = obj.getAsJsonArray("steps");
@@ -130,7 +118,7 @@ public class ModConfig {
 					));
 				}
 			}
-			
+
 			save();
 		} catch (Exception e) {
 			SimpleInstructions.LOGGER.warn("Failed to load config", e);
@@ -142,13 +130,11 @@ public class ModConfig {
 		obj.addProperty("_comment", "Simple Instructions config. Edit values and relaunch to apply. Colors are decimal RGB (use a hex converter).");
 		obj.addProperty("configVersion", CONFIG_VERSION);
 
-		// General
 		obj.addProperty("_comment_general", "--- General ---");
 		obj.addProperty("tutorialEnabled", tutorialEnabled);
 		obj.addProperty("showOnWorldJoin", showOnWorldJoin);
 		obj.addProperty("skippable", skippable);
 
-		// Appearance
 		obj.addProperty("_comment_appearance", "--- Appearance --- (plaqueWidth: 160-320, plaqueScale: 50-200%, positionXPercent: 0-100, positionY: pixels from top)");
 		obj.addProperty("plaqueWidth", plaqueWidth);
 		obj.addProperty("plaqueScale", plaqueScale);
@@ -161,7 +147,6 @@ public class ModConfig {
 		obj.addProperty("_comment_font", "fontType: 'default' (pixel), 'uniform' (smooth), 'alt' (enchant)");
 		obj.addProperty("fontType", fontType);
 
-		// Colors (written as decimal; add hex in comment)
 		obj.addProperty("_comment_colors", "--- Colors --- (decimal RGB values, e.g. 16777215 = #FFFFFF white)");
 		obj.addProperty("titleColor", titleColor);
 		obj.addProperty("descriptionColor", descriptionColor);
@@ -169,14 +154,12 @@ public class ModConfig {
 		obj.addProperty("barCompleteColor", barCompleteColor);
 		obj.addProperty("backgroundColor", backgroundColor);
 
-		// Render mode
 		obj.addProperty("_comment_render", "--- Render --- renderMode: 'texture' (nine-slice PNG, resource-pack overridable) or 'solid' (flat color with 3D bevel)");
 		obj.addProperty("renderMode", renderMode);
 		obj.addProperty("nineSliceBorder", nineSliceBorder);
 		obj.addProperty("_comment_plaqueStyle", "plaqueStyle: preset name — 'default', 'dark', 'wooden', 'clean', or a custom PNG filename (without .png)");
 		obj.addProperty("plaqueStyle", plaqueStyle);
 
-		// Animation
 		obj.addProperty("_comment_animation", "--- Animation --- (durations in milliseconds)");
 		obj.addProperty("revealDurationMs", revealDurationMs);
 		obj.addProperty("dismissDurationMs", dismissDurationMs);
@@ -184,12 +167,10 @@ public class ModConfig {
 		obj.addProperty("enableFlash", enableFlash);
 		obj.addProperty("flashIntensity", flashIntensity);
 
-		// Sound
 		obj.addProperty("_comment_sound", "--- Sound ---");
 		obj.addProperty("enableCompletionSound", enableCompletionSound);
 		obj.addProperty("soundVolume", soundVolume);
 
-		// Visual overrides (per-step, optional)
 		obj.addProperty("_comment_overrides", "--- Per-Step Visual Overrides --- (keyed by step ID; null/missing = use global default)");
 		JsonObject voObj = new JsonObject();
 		for (Map.Entry<String, StepVisualOverrides> entry : visualOverrides.entrySet()) {
@@ -199,7 +180,6 @@ public class ModConfig {
 		}
 		obj.add("visualOverrides", voObj);
 
-		// Steps
 		obj.addProperty("_comment_steps", "--- Instruction Steps --- actionType: KEY_PRESS or KEY_HOLD. targetKey: named key (forward/back/jump/sneak/sprint/inventory/attack/use/drop/chat) or raw key (key.keyboard.x / key.mouse.0).");
 		JsonArray arr = new JsonArray();
 		for (InstructionStep step : steps) {
@@ -237,10 +217,9 @@ public class ModConfig {
 		return obj.has(key) ? obj.get(key).getAsString() : def;
 	}
 
-	
 	public static List<InstructionStep> getSteps() {
 		if (steps.isEmpty()) {
-			// Populate from default.json on first access (no auto-save — let user actions trigger saves)
+			//lazy-load from default.json on first access
 			List<InstructionStep> defaults = InstructionLoader.loadDefault();
 			steps.addAll(defaults);
 		}
@@ -273,7 +252,6 @@ public class ModConfig {
 		}
 	}
 
-	
 	public static boolean isTutorialEnabled() { return tutorialEnabled; }
 	public static boolean isShowOnWorldJoin() { return showOnWorldJoin; }
 	public static boolean isSkippable() { return skippable; }
@@ -302,7 +280,6 @@ public class ModConfig {
 	public static int getNineSliceBorder() { return nineSliceBorder; }
 	public static String getPlaqueStyle() { return plaqueStyle; }
 
-	
 	public static void setTutorialEnabled(boolean v) { tutorialEnabled = v; }
 	public static void setShowOnWorldJoin(boolean v) { showOnWorldJoin = v; }
 	public static void setSkippable(boolean v) { skippable = v; }
@@ -363,7 +340,6 @@ public class ModConfig {
 		save();
 	}
 
-	
 	public static void clearOverrideField(java.util.function.Consumer<StepVisualOverrides> clearer) {
 		for (StepVisualOverrides o : visualOverrides.values()) {
 			clearer.accept(o);

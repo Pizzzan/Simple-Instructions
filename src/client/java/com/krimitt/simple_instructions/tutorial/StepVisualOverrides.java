@@ -17,8 +17,6 @@ public class StepVisualOverrides {
 
 	public StepVisualOverrides() {}
 
-	// --- Getters (nullable — null means "use global default") ---
-
 	public @Nullable Integer getPositionXPercent() { return positionXPercent; }
 	public @Nullable Integer getPositionY() { return positionY; }
 	public @Nullable Integer getPlaqueWidth() { return plaqueWidth; }
@@ -30,8 +28,6 @@ public class StepVisualOverrides {
 	public @Nullable Boolean getTextShadow() { return textShadow; }
 	public @Nullable String getPlaqueStyle() { return plaqueStyle; }
 
-	// --- Setters ---
-
 	public void setPositionXPercent(@Nullable Integer v) { positionXPercent = v; }
 	public void setPositionY(@Nullable Integer v) { positionY = v; }
 	public void setPlaqueWidth(@Nullable Integer v) { plaqueWidth = v; }
@@ -42,8 +38,6 @@ public class StepVisualOverrides {
 	public void setFontType(@Nullable String v) { fontType = v; }
 	public void setTextShadow(@Nullable Boolean v) { textShadow = v; }
 	public void setPlaqueStyle(@Nullable String v) { plaqueStyle = v; }
-
-	// --- Resolved getters (with global fallback) ---
 
 	public int resolvePositionXPercent() {
 		return positionXPercent != null ? positionXPercent : ModConfig.getPositionXPercent();
@@ -104,8 +98,6 @@ public class StepVisualOverrides {
 		textShadow = null;
 		plaqueStyle = null;
 	}
-
-	// --- JSON serialization ---
 
 	public JsonObject toJson() {
 		JsonObject obj = new JsonObject();

@@ -36,15 +36,12 @@ public class InstructionManager {
 	private SoundInstance currentSound = null;
 	private boolean wasKeyDown = false;
 
-	// Test mode
 	private boolean testMode = false;
 	private boolean testSingleStep = false;
 	private Runnable onTestComplete = null;
 
 	private InstructionManager() {
 	}
-
-	
 
 	public void onWorldJoin() {
 		if (!ModConfig.isTutorialEnabled() || !ModConfig.isShowOnWorldJoin()) return;
@@ -61,7 +58,6 @@ public class InstructionManager {
 		this.steps = new ArrayList<>(loaded);
 		this.currentSetId = setId;
 
-		
 		int savedIndex = CompletionPersistence.loadCurrentStep();
 		if (savedIndex > 0 && savedIndex < loaded.size()) {
 			this.currentIndex = savedIndex;
@@ -75,7 +71,6 @@ public class InstructionManager {
 		this.testSingleStep = false;
 	}
 
-	
 	public void startTest(int fromStep, boolean singleStep, Runnable onComplete) {
 		List<InstructionStep> loaded = ModConfig.getSteps();
 		if (loaded.isEmpty() || fromStep < 0 || fromStep >= loaded.size()) return;
@@ -94,9 +89,6 @@ public class InstructionManager {
 		transitionTo(AnimationState.SLIDING_IN);
 	}
 
-	/**
-	 * Abort the current tutorial/test. Optionally fires test complete callback.
-	 */
 	public void abort() {
 		if (!active && !pendingStart) return;
 		active = false;
@@ -109,16 +101,13 @@ public class InstructionManager {
 		if (cb != null) cb.run();
 	}
 
-	/**
-	 * Skip the entire tutorial (player requested).
-	 */
 	public void skipAll() {
 		if (!active) return;
 		active = false;
 		state = AnimationState.DONE;
 		if (!testMode) {
 			CompletionPersistence.markCompleted(currentSetId);
-			CompletionPersistence.saveCurrentStep(0); // clear progress
+			CompletionPersistence.saveCurrentStep(0); //clear saved progress
 		}
 		Runnable cb = onTestComplete;
 		testMode = false;
@@ -126,8 +115,6 @@ public class InstructionManager {
 		onTestComplete = null;
 		if (cb != null) cb.run();
 	}
-
-	
 
 	public void tick() {
 		if (pendingStart) {
@@ -187,7 +174,6 @@ public class InstructionManager {
 			return;
 		}
 
-		// KEY_PRESS / KEY_HOLD
 		String targetKey = step.getTargetKey();
 		boolean isDown;
 
@@ -257,7 +243,6 @@ public class InstructionManager {
 
 	private void advanceOrFinish() {
 		if (testSingleStep) {
-			
 			active = false;
 			state = AnimationState.DONE;
 			Runnable cb = onTestComplete;
@@ -273,7 +258,6 @@ public class InstructionManager {
 			progressCount = 0;
 			wasKeyDown = false;
 			transitionTo(AnimationState.SLIDING_IN);
-			
 			if (!testMode) {
 				CompletionPersistence.saveCurrentStep(currentIndex);
 			}
@@ -282,7 +266,7 @@ public class InstructionManager {
 			active = false;
 			if (!testMode) {
 				CompletionPersistence.markCompleted(currentSetId);
-				CompletionPersistence.saveCurrentStep(0); // clear progress
+				CompletionPersistence.saveCurrentStep(0); //clear saved progress
 			}
 			SimpleInstructions.LOGGER.info("Tutorial '{}' completed", currentSetId);
 			Runnable cb = onTestComplete;
@@ -316,8 +300,6 @@ public class InstructionManager {
 		currentSound = PositionedSoundInstance.master(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, volume);
 		client.getSoundManager().play(currentSound);
 	}
-
-	
 
 	public boolean isActive() { return active; }
 	public boolean isTestMode() { return testMode; }

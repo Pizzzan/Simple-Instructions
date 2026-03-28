@@ -10,10 +10,6 @@ import net.minecraft.util.Util;
 
 import java.nio.file.Path;
 
-/**
- * Scrollable guide screen for creating custom plaque textures.
- * Accessible from the Texture Editor via the "Guide" button.
- */
 public class TextureGuideScreen extends Screen {
 	private final Screen parent;
 	private int scroll = 0;
@@ -74,7 +70,6 @@ public class TextureGuideScreen extends Screen {
 			try {
 				Path out = PlaqueTextures.exportTemplate();
 				btn.setMessage(Text.literal("\u00a7aExported!"));
-				// Show just the filename in the status line
 				exportedPath = "\u00a77Saved to textures folder: \u00a7a" + out.getFileName().toString();
 				exportedPathResetAt = Util.getMeasuringTimeMs() + 5000;
 			} catch (Exception e) {
@@ -103,8 +98,7 @@ public class TextureGuideScreen extends Screen {
 		TextRenderer tr = client.textRenderer;
 		ctx.drawCenteredTextWithShadow(tr, title, width / 2, 6, 0xFFFFDD00);
 
-		// Content area: clip text so it stops above the bottom bar
-		int contentBottom = height - 42; // leave room for status + buttons
+		int contentBottom = height - 42;
 		int y = 22 - scroll;
 		int left = width / 2 - 160;
 		for (String line : LINES) {
@@ -118,10 +112,8 @@ public class TextureGuideScreen extends Screen {
 			y += 11;
 		}
 
-		// Opaque bottom bar so text can't bleed through
 		ctx.fill(0, contentBottom, width, height, 0xFF000000);
 
-		// Show exported status above buttons
 		if (exportedPath != null) {
 			Text pathText = Text.literal(exportedPath);
 			int textWidth = tr.getWidth(pathText);
@@ -136,7 +128,7 @@ public class TextureGuideScreen extends Screen {
 	public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
 		int totalHeight = LINES.length * 11;
 		int contentBottom = height - 42;
-		int viewHeight = contentBottom - 22; // from y=22 to contentBottom
+		int viewHeight = contentBottom - 22;
 		int maxScroll = Math.max(0, totalHeight - viewHeight);
 		scroll = Math.max(0, Math.min(maxScroll, scroll - (int)(amount * 11)));
 		return true;

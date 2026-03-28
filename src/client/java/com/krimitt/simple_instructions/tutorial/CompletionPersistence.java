@@ -16,16 +16,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Per-player tutorial progress and completion persistence.
- * Stores data under config/simple_instructions/progress/{uuid}.json
- *
- * File format:
- * {
- *   "completedSets": ["default"],
- *   "currentStep": 2
- * }
- */
 public class CompletionPersistence {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final Path PROGRESS_DIR = FabricLoader.getInstance().getConfigDir()

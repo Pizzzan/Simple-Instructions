@@ -12,12 +12,10 @@ public class ColorPickerPopup extends Screen {
 	private static final int PANEL_W = 200;
 	private static final int PANEL_H = 210;
 
-	// Quick-pick color grid (10 columns x 10 rows = 100 colors)
 	private static final int[] GRID_COLORS = generateColorGrid();
 	private static final int GRID_COLS = 10;
 	private static final int GRID_CELL = 14;
 
-	// HSV state
 	private float hue = 0f, sat = 1f, val = 1f;
 	private int currentColor;
 	private boolean hsvMode = false;
@@ -45,7 +43,6 @@ public class ColorPickerPopup extends Screen {
 		px = width / 2 - PANEL_W / 2;
 		py = height / 2 - PANEL_H / 2;
 
-		// Hex input
 		hexField = addDrawableChild(new TextFieldWidget(
 			textRenderer, px + 4, py + PANEL_H - 50, 70, 16, Text.literal("Hex")));
 		hexField.setMaxLength(7);
@@ -64,20 +61,17 @@ public class ColorPickerPopup extends Screen {
 			}
 		});
 
-		// Toggle HSV mode
 		addDrawableChild(ButtonWidget.builder(
 			Text.literal(hsvMode ? "Grid" : "HSV"), btn -> {
 				hsvMode = !hsvMode;
 				btn.setMessage(Text.literal(hsvMode ? "Grid" : "HSV"));
 			}).dimensions(px + 78, py + PANEL_H - 50, 36, 16).build());
 
-		// Done
 		addDrawableChild(ButtonWidget.builder(Text.literal("Done"), btn -> {
 			onColorPicked.accept(currentColor);
 			client.setScreen(parent);
 		}).dimensions(px + 118, py + PANEL_H - 50, 36, 16).build());
 
-		// Cancel
 		addDrawableChild(ButtonWidget.builder(Text.literal("X"), btn -> {
 			client.setScreen(parent);
 		}).dimensions(px + 158, py + PANEL_H - 50, 20, 16).build());
@@ -95,7 +89,6 @@ public class ColorPickerPopup extends Screen {
 		
 		ctx.drawCenteredTextWithShadow(textRenderer, "Pick a Color", px + PANEL_W / 2, py + 4, 0xFFFFDD00);
 
-		// Current color preview
 		int prevX = px + PANEL_W - 24, prevY = py + PANEL_H - 48;
 		ctx.fill(prevX - 1, prevY - 1, prevX + 15, prevY + 15, 0xFFFFFFFF);
 		ctx.fill(prevX, prevY, prevX + 14, prevY + 14, 0xFF000000 | currentColor);
@@ -185,7 +178,6 @@ public class ColorPickerPopup extends Screen {
 				return true;
 			}
 		} else {
-			// Grid click
 			int gridX = px + 10, gridY = py + 18;
 			for (int i = 0; i < GRID_COLORS.length; i++) {
 				int col = i % GRID_COLS;
@@ -239,8 +231,6 @@ public class ColorPickerPopup extends Screen {
 		hexField.setText(String.format("#%06X", currentColor));
 	}
 
-	// --- HSV <-> RGB ---
-
 	static int hsvToRgb(float h, float s, float v) {
 		float c = v * s;
 		float x = c * (1f - Math.abs((h * 6f) % 2f - 1f));
@@ -284,7 +274,6 @@ public class ColorPickerPopup extends Screen {
 	
 	private static int[] generateColorGrid() {
 		int[] colors = new int[100];
-		// Row 0: grayscale (10 shades)
 		for (int i = 0; i < 10; i++) {
 			int v = (int) (i / 9f * 255);
 			colors[i] = (v << 16) | (v << 8) | v;

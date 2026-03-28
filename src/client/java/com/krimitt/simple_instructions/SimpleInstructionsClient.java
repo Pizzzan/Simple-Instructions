@@ -38,32 +38,22 @@ public class SimpleInstructionsClient implements ClientModInitializer {
 			InstructionManager mgr = InstructionManager.INSTANCE;
 			mgr.tick();
 
-			// ESC during test mode → abort and return to editor
-			// Intercept both: ESC with no screen open, and ESC that already opened the pause menu
-			if (mgr.isTestMode() && mgr.isActive()) {
-				if (client.currentScreen instanceof GameMenuScreen) {
-					client.setScreen(null);
+			//backspace aborts test mode
+			if (mgr.isTestMode() && mgr.isActive() && client.currentScreen == null) {
+				long window = client.getWindow().getHandle();
+				if (InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_BACKSPACE)) {
 					mgr.abort();
 					return;
 				}
-				if (client.currentScreen == null) {
-					long window = client.getWindow().getHandle();
-					if (InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_ESCAPE)) {
-						mgr.abort();
-						return;
-					}
-				}
 			}
 
-			// Skip tutorial keybind (only when active, not test mode, skippable)
 			if (!mgr.isTestMode() && mgr.isActive() && ModConfig.isSkippable()
 					&& client.currentScreen == null) {
-				// Try registered keybind first
 				boolean skip = false;
 				while (skipTutorialKey.wasPressed()) {
 					skip = true;
 				}
-				// Fallback: raw GLFW key check with rising-edge detection
+				//raw key fallback, rising-edge
 				if (!skip) {
 					long window = client.getWindow().getHandle();
 					boolean isDown = InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_X);
@@ -76,8 +66,7 @@ public class SimpleInstructionsClient implements ClientModInitializer {
 					mgr.skipAll();
 				}
 			} else {
-				// Drain any queued presses when skip isn't available
-				while (skipTutorialKey.wasPressed()) { /* consume */ }
+				while (skipTutorialKey.wasPressed()) {}
 				skipKeyWasDown = false;
 			}
 		});
@@ -88,7 +77,6 @@ public class SimpleInstructionsClient implements ClientModInitializer {
 			});
 		});
 
-		// Add "SI" button to pause screen
 		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
 			if (screen instanceof GameMenuScreen) {
 				Screens.getButtons(screen).add(

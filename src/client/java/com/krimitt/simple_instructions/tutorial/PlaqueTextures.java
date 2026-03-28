@@ -23,13 +23,9 @@ public class PlaqueTextures {
 	private static final int DEFAULT_TEX_SIZE = 64;
 	private static final int BORDER = 8;
 
-	// All known preset names in display order
 	private static final List<String> presetOrder = new ArrayList<>();
-	// Map from preset name → texture Identifier
 	private static final Map<String, Identifier> textures = new LinkedHashMap<>();
-	// Map from preset name → texture dimensions [width, height]
 	private static final Map<String, int[]> textureSizes = new HashMap<>();
-	// Set of custom preset names (for UI display purposes)
 	private static final Set<String> customNames = new HashSet<>();
 
 	private static boolean initialized = false;
@@ -40,20 +36,17 @@ public class PlaqueTextures {
 		if (MinecraftClient.getInstance().getTextureManager() == null) return;
 		initialized = true;
 
-		// "default" — the shipped asset texture
 		Identifier defaultId = new Identifier("simple_instructions", "textures/gui/instruction_plaque.png");
 		textures.put("default", defaultId);
 		textureSizes.put("default", new int[]{DEFAULT_TEX_SIZE, DEFAULT_TEX_SIZE});
 		presetOrder.add("default");
 
-		// Generate built-in variants
 		registerGenerated("dark", PlaqueTextures::paintDark);
 		registerGenerated("wooden", PlaqueTextures::paintWooden);
 
-		// "clean" is a marker for solid mode — no texture file needed
+		//"clean" = solid mode, no texture file
 		presetOrder.add("clean");
 
-		// Scan custom folder
 		scanCustomFolder();
 	}
 
@@ -66,10 +59,8 @@ public class PlaqueTextures {
 
 		var texMgr = MinecraftClient.getInstance().getTextureManager();
 
-		// Save names before clearing so we can clean up
 		Set<String> oldCustom = new HashSet<>(customNames);
 
-		// Unregister old custom textures
 		for (String name : oldCustom) {
 			Identifier id = textures.remove(name);
 			if (id != null) texMgr.destroyTexture(id);
@@ -78,7 +69,6 @@ public class PlaqueTextures {
 		presetOrder.removeAll(oldCustom);
 		customNames.clear();
 
-		// Rescan
 		scanCustomFolder();
 	}
 
@@ -91,28 +81,18 @@ public class PlaqueTextures {
 		return customNames.contains(name);
 	}
 
-	/**
-	 * Returns the texture Identifier for the given preset name.
-	 * Returns null for "clean" (solid mode) or unknown names.
-	 */
 	public static Identifier getTexture(String name) {
 		init();
 		if ("clean".equals(name)) return null;
 		Identifier id = textures.get(name);
 		if (id != null) return id;
-		// Fallback to default
 		return textures.get("default");
 	}
 
-	/**
-	 * Returns the texture dimensions [width, height] for the given preset.
-	 * Falls back to [64, 64] if unknown.
-	 */
 	public static int[] getTextureSize(String name) {
 		init();
 		int[] size = textureSizes.get(name);
 		if (size != null) return size;
-		// Fallback
 		return new int[]{DEFAULT_TEX_SIZE, DEFAULT_TEX_SIZE};
 	}
 
@@ -131,8 +111,6 @@ public class PlaqueTextures {
 		};
 	}
 
-	// --- Built-in texture generation ---
-
 	private static void registerGenerated(String name, Consumer<NativeImage> painter) {
 		NativeImage img = new NativeImage(DEFAULT_TEX_SIZE, DEFAULT_TEX_SIZE, false);
 		painter.accept(img);
@@ -145,7 +123,6 @@ public class PlaqueTextures {
 	}
 
 	private static void paintDark(NativeImage img) {
-		// Dark stone theme: charcoal border with dark gray fill
 		int borderOuter = abgr(255, 0x10, 0x10, 0x10);
 		int borderMid   = abgr(255, 0x30, 0x30, 0x35);
 		int borderInner = abgr(255, 0x45, 0x45, 0x4A);
@@ -155,7 +132,6 @@ public class PlaqueTextures {
 	}
 
 	private static void paintWooden(NativeImage img) {
-		// Wooden theme: brown border with lighter wood fill
 		int borderOuter = abgr(255, 0x30, 0x1E, 0x0A);
 		int borderMid   = abgr(255, 0x5A, 0x3A, 0x1A);
 		int borderInner = abgr(255, 0x7A, 0x55, 0x30);
@@ -174,28 +150,24 @@ public class PlaqueTextures {
 
 	private static void paintNineSlice(NativeImage img, int outer, int mid, int inner, int fill) {
 		int size = DEFAULT_TEX_SIZE;
-		// Fill entire image with outer border color
 		for (int y = 0; y < size; y++) {
 			for (int x = 0; x < size; x++) {
 				img.setColor(x, y, outer);
 			}
 		}
 
-		// Mid border (2px inset)
 		for (int y = 2; y < size - 2; y++) {
 			for (int x = 2; x < size - 2; x++) {
 				img.setColor(x, y, mid);
 			}
 		}
 
-		// Inner border (5px inset)
 		for (int y = 5; y < size - 5; y++) {
 			for (int x = 5; x < size - 5; x++) {
 				img.setColor(x, y, inner);
 			}
 		}
 
-		// Fill (border px inset)
 		for (int y = BORDER; y < size - BORDER; y++) {
 			for (int x = BORDER; x < size - BORDER; x++) {
 				img.setColor(x, y, fill);
@@ -203,12 +175,10 @@ public class PlaqueTextures {
 		}
 	}
 
-	// NativeImage uses ABGR format
+	//NativeImage uses ABGR, not ARGB
 	private static int abgr(int a, int r, int g, int b) {
 		return (a << 24) | (b << 16) | (g << 8) | r;
 	}
-
-	// --- Custom texture scanning ---
 
 	private static void scanCustomFolder() {
 		if (!Files.isDirectory(CUSTOM_DIR)) {
@@ -219,9 +189,9 @@ public class PlaqueTextures {
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(CUSTOM_DIR, "*.png")) {
 			for (Path file : stream) {
 				String fileName = file.getFileName().toString();
-				String name = fileName.substring(0, fileName.length() - 4); // strip .png
-				if (name.startsWith("_")) continue; // skip template files
-				if (textures.containsKey(name)) continue; // don't override built-in
+				String name = fileName.substring(0, fileName.length() - 4);
+				if (name.startsWith("_")) continue;
+				if (textures.containsKey(name)) continue;
 
 				try (InputStream is = Files.newInputStream(file)) {
 					NativeImage img = NativeImage.read(is);
@@ -250,7 +220,6 @@ public class PlaqueTextures {
 
 		NativeImage img = new NativeImage(DEFAULT_TEX_SIZE, DEFAULT_TEX_SIZE, false);
 
-		// Border region — red tint
 		int borderColor = abgr(255, 0xCC, 0x44, 0x44);
 		for (int y = 0; y < DEFAULT_TEX_SIZE; y++) {
 			for (int x = 0; x < DEFAULT_TEX_SIZE; x++) {
@@ -258,7 +227,6 @@ public class PlaqueTextures {
 			}
 		}
 
-		// Fill region — green tint
 		int fillColor = abgr(255, 0x44, 0xCC, 0x44);
 		for (int y = BORDER; y < DEFAULT_TEX_SIZE - BORDER; y++) {
 			for (int x = BORDER; x < DEFAULT_TEX_SIZE - BORDER; x++) {
@@ -266,7 +234,6 @@ public class PlaqueTextures {
 			}
 		}
 
-		// Corner markers — blue
 		int cornerColor = abgr(255, 0x44, 0x44, 0xCC);
 		for (int y = 0; y < BORDER; y++) {
 			for (int x = 0; x < BORDER; x++) {

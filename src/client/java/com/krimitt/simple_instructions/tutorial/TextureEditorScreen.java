@@ -12,20 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntConsumer;
 
-/**
- * Texture Editor — left: live plaque preview, right: preset grid, bottom: action bar.
- * Replaces the old TextureHelpScreen.
- */
 public class TextureEditorScreen extends Screen {
 	private final Screen parent;
 	private String selectedStyle;
 	private int presetScroll = 0;
 
-	// Layout
 	private int previewX, previewW, controlX, controlW, panelTop, panelBottom;
 	private boolean didReload = false;
 
-	// Timed button messages
 	private final List<TimedMessage> timedMessages = new ArrayList<>();
 	private record TimedMessage(ButtonWidget btn, Text original, long resetAt) {}
 
@@ -43,7 +37,6 @@ public class TextureEditorScreen extends Screen {
 
 	@Override
 	protected void init() {
-		// Rescan custom textures folder on first open (not on every scroll/rebuild)
 		if (!didReload) {
 			didReload = true;
 			PlaqueTextures.reload();
@@ -57,7 +50,6 @@ public class TextureEditorScreen extends Screen {
 		controlX = divider;
 		controlW = width - divider;
 
-		// --- Right panel: preset list ---
 		List<String> presets = PlaqueTextures.getPresetNames();
 		int btnW = controlW - 16;
 		int btnH = 20;
@@ -70,7 +62,7 @@ public class TextureEditorScreen extends Screen {
 			int idx = i + presetScroll;
 			String preset = presets.get(idx);
 			String label = PlaqueTextures.getDisplayName(preset);
-			if (PlaqueTextures.isCustom(preset)) label = "\u2605 " + label; // star for custom
+			if (PlaqueTextures.isCustom(preset)) label = "\u2605 " + label;
 			boolean isSelected = preset.equals(selectedStyle);
 			if (isSelected) label = "> " + label;
 
@@ -81,7 +73,6 @@ public class TextureEditorScreen extends Screen {
 			}).dimensions(controlX + 8, listTop + i * (btnH + gap), btnW, btnH).build());
 		}
 
-		// --- Border size slider (left panel, below preview) ---
 		if (!PlaqueTextures.isSolidMode(selectedStyle)) {
 			int sliderW = Math.min(160, previewW - 40);
 			int sliderX = previewX + previewW / 2 - sliderW / 2;
@@ -93,14 +84,13 @@ public class TextureEditorScreen extends Screen {
 				}));
 		}
 
-		// --- Bottom bar ---
 		int bbY = height - 24;
 		int bbBtnW = 80;
 		int bbGap = 4;
 		int totalW = bbBtnW * 4 + bbGap * 3;
 		int bbX = width / 2 - totalW / 2;
 
-		addDrawableChild(ButtonWidget.builder(Text.literal("Apply"), btn -> {
+		addDrawableChild(ButtonWidget.builder(Text.literal("Apply to All"), btn -> {
 			ModConfig.setPlaqueStyle(selectedStyle);
 			if (PlaqueTextures.isSolidMode(selectedStyle)) {
 				ModConfig.setRenderMode("solid");
@@ -112,27 +102,24 @@ public class TextureEditorScreen extends Screen {
 		}).dimensions(bbX, bbY, bbBtnW, 20).build());
 
 		addDrawableChild(ButtonWidget.builder(Text.literal("Reset All"), btn -> {
-			selectedStyle = "default";
-			ModConfig.setPlaqueStyle("default");
-			ModConfig.setRenderMode("texture");
-			ModConfig.save();
-			clearAndInit();
+			if (btn.getMessage().getString().contains("sure")) {
+				selectedStyle = "default";
+				ModConfig.setPlaqueStyle("default");
+				ModConfig.setRenderMode("texture");
+				ModConfig.save();
+				clearAndInit();
+			} else {
+				btn.setMessage(Text.literal("\u00a7cAre you sure?"));
+				timedMessages.add(new TimedMessage(btn, Text.literal("Reset All"), Util.getMeasuringTimeMs() + 3000));
+			}
 		}).dimensions(bbX + bbBtnW + bbGap, bbY, bbBtnW, 20).build());
 
 		addDrawableChild(ButtonWidget.builder(Text.literal("Guide"), btn -> {
 			client.setScreen(new TextureGuideScreen(this));
 		}).dimensions(bbX + (bbBtnW + bbGap) * 2, bbY, bbBtnW, 20).build());
 
-		addDrawableChild(ButtonWidget.builder(Text.literal("Done"), btn -> {
-			ModConfig.setPlaqueStyle(selectedStyle);
-			if (PlaqueTextures.isSolidMode(selectedStyle)) {
-				ModConfig.setRenderMode("solid");
-			} else {
-				ModConfig.setRenderMode("texture");
-			}
-			ModConfig.save();
-			close();
-		}).dimensions(bbX + (bbBtnW + bbGap) * 3, bbY, bbBtnW, 20).build());
+		addDrawableChild(ButtonWidget.builder(Text.literal("Done"), btn -> close())
+			.dimensions(bbX + (bbBtnW + bbGap) * 3, bbY, bbBtnW, 20).build());
 	}
 
 	@Override
@@ -141,42 +128,34 @@ public class TextureEditorScreen extends Screen {
 
 		TextRenderer tr = client.textRenderer;
 
-		// --- Left panel: live preview ---
 		ctx.fill(previewX, panelTop, previewX + previewW, panelBottom, 0x44000000);
 
-		// Draw a centered plaque preview using the selected style
 		int plaqueW = Math.min(280, previewW - 20);
 		int plaqueH = InstructionRenderer.getBaseHeight();
 		int px = previewX + previewW / 2 - plaqueW / 2;
 		int py = panelTop + (panelBottom - panelTop) / 2 - plaqueH / 2 - 10;
 
-		// Temporarily draw with the selected style
 		InstructionRenderer.drawParchmentBackground(ctx, px, py, plaqueW, plaqueH, 1.0f,
 			ModConfig.getBackgroundColor(), selectedStyle);
 
-		// Draw sample text on the preview
 		String sampleTitle = "Sample Title";
 		String sampleDesc = "This is how it looks";
 		int textCx = px + plaqueW / 2;
 		ctx.drawCenteredTextWithShadow(tr, sampleTitle, textCx, py + 8, 0xFFFFFFFF);
 		ctx.drawCenteredTextWithShadow(tr, sampleDesc, textCx, py + 21, 0xFFFFDD00);
 
-		// Progress bar preview
 		int barX = px + 6;
 		int barY = py + plaqueH - 6;
 		int barW = plaqueW - 12;
 		ctx.fill(barX, barY, barX + barW, barY + 2, 0xFF302410);
 		ctx.fill(barX, barY, barX + (int)(barW * 0.6f), barY + 2, 0xFF000000 | ModConfig.getBarColor());
 
-		// Style name below preview
 		String styleName = PlaqueTextures.getDisplayName(selectedStyle);
 		ctx.drawCenteredTextWithShadow(tr, "Current: " + styleName, previewX + previewW / 2, py + plaqueH + 14, 0xFFCCCCCC);
 
-		// --- Right panel background ---
 		ctx.fill(controlX, panelTop, width, panelBottom, 0x44000000);
 		ctx.drawTextWithShadow(tr, "Presets", controlX + 8, panelTop + 4, 0xFFFFDD00);
 
-		// Scroll indicator
 		List<String> presets = PlaqueTextures.getPresetNames();
 		int btnH = 20;
 		int gap = 2;
@@ -191,14 +170,11 @@ public class TextureEditorScreen extends Screen {
 			ctx.fill(width - 4, scrollBarY, width - 1, scrollBarY + scrollBarH, 0x66FFFFFF);
 		}
 
-		// Open textures folder hint
 		ctx.drawTextWithShadow(tr, "Drop PNGs in textures folder", controlX + 8, panelBottom - 14, 0x666666);
 
-		// --- Title bar ---
 		ctx.drawCenteredTextWithShadow(tr, title, width / 2, 4, 0xFFFFDD00);
 
-		// --- Bottom bar background ---
-		ctx.fill(0, height - 28, width, height, 0x66000000);
+		ctx.fill(0, height - 28, width, height, 0xFF1A1A1A);
 
 		super.render(ctx, mouseX, mouseY, delta);
 	}

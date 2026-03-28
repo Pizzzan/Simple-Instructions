@@ -22,14 +22,12 @@ public class SimpleInstructionsConfigScreen extends Screen {
 	private Tab currentTab = Tab.GENERAL;
 	private final List<LabelInfo> labels = new ArrayList<>();
 
-	
 	private int activeColorRow = 0;
 	private final IntConsumer[] colorSetters = new IntConsumer[5];
 	private final TextFieldWidget[] colorFields = new TextFieldWidget[5];
 	private int swatchScroll = 0;
-	private int swatchGridY = 0; 
+	private int swatchGridY = 0;
 
-	
 	private final List<TimedMsg> timedMsgs = new ArrayList<>();
 	private record TimedMsg(ButtonWidget btn, Text original, long resetAt) {}
 
@@ -57,7 +55,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 		int totalTabWidth = tabWidth * Tab.values().length + tabGap * (Tab.values().length - 1);
 		int tabStartX = centerX - totalTabWidth / 2;
 
-		// Tab buttons
 		for (int i = 0; i < Tab.values().length; i++) {
 			Tab tab = Tab.values()[i];
 			int tx = tabStartX + i * (tabWidth + tabGap);
@@ -68,7 +65,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 				.dimensions(tx, tabY, tabWidth, 20).build());
 		}
 
-		// Content for active tab
 		int contentY = 60;
 		switch (currentTab) {
 			case GENERAL -> buildGeneralTab(centerX, contentY);
@@ -77,7 +73,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 			case EFFECTS -> buildEffectsTab(centerX, contentY);
 		}
 
-		// Done button
 		addDrawableChild(ButtonWidget.builder(Text.literal("Done"), btn -> close())
 			.dimensions(centerX - 100, height - 28, 200, 20).build());
 	}
@@ -97,7 +92,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 		init();
 	}
 
-	// ======== GENERAL ========
 	private void buildGeneralTab(int centerX, int startY) {
 		int w = 200, x = centerX - w / 2;
 
@@ -166,7 +160,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 			"Open the texture editor to change the\nplaque's visual style.")));
 	}
 
-	// ======== APPEARANCE ========
 	private void buildAppearanceTab(int centerX, int startY) {
 		int w = 200, x = centerX - w / 2;
 		int halfW = w / 2 - 1;
@@ -197,7 +190,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 			}));
 		row++;
 
-		// BG Opacity + Render Mode on same row
 		addDrawableChild(new IntSlider(x, startY + row * gap, halfW, 20,
 			"Opacity: ", "%", 0, 100, ModConfig.getBackgroundOpacity(), v -> {
 				ModConfig.setBackgroundOpacity(v); ModConfig.save();
@@ -214,7 +206,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 			}));
 		row++;
 
-		// Show Icon + Icon Item on same row
 		addDrawableChild(CyclingButtonWidget.onOffBuilder(
 				Text.literal("ON").formatted(Formatting.GREEN),
 				Text.literal("OFF").formatted(Formatting.RED))
@@ -232,7 +223,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 		});
 		row++;
 
-		// Text Shadow + Font on same row
 		addDrawableChild(CyclingButtonWidget.onOffBuilder(
 				Text.literal("ON").formatted(Formatting.GREEN),
 				Text.literal("OFF").formatted(Formatting.RED))
@@ -261,34 +251,22 @@ public class SimpleInstructionsConfigScreen extends Screen {
 		return list;
 	}
 
-	// Color presets — full spectrum, 9 per row
 	private static final int[] COLOR_PRESETS = {
-		// Grays
 		0xFFFFFF, 0xDDDDDD, 0xAAAAAA, 0x777777, 0x555555, 0x333333, 0x111111, 0x000000, 0x000000,
-		// Reds
 		0xFFCCCC, 0xFF8888, 0xFF4444, 0xFF0000, 0xCC0000, 0x990000, 0x660000, 0x440000, 0x330000,
-		// Oranges / Browns
 		0xFFDDAA, 0xFFBB66, 0xFF9933, 0xFF7700, 0xCC5500, 0x994400, 0x663300, 0x442200, 0x331100,
-		// Yellows / Gold
 		0xFFFFAA, 0xFFFF66, 0xFFFF00, 0xFFDD00, 0xDDBB00, 0xAA8800, 0x886600, 0x665500, 0x443300,
-		// Greens
 		0xCCFFCC, 0x88FF88, 0x44FF44, 0x00FF00, 0x00CC00, 0x009900, 0x006600, 0x004400, 0x003300,
-		// Cyans / Teals
 		0xCCFFFF, 0x88FFFF, 0x44FFFF, 0x00FFFF, 0x00CCCC, 0x009999, 0x006666, 0x004444, 0x003333,
-		// Blues
 		0xCCCCFF, 0x8888FF, 0x4444FF, 0x0000FF, 0x0000CC, 0x000099, 0x000066, 0x000044, 0x000033,
-		// Purples
 		0xEECCFF, 0xDD88FF, 0xCC44FF, 0xAA00FF, 0x8800CC, 0x660099, 0x440066, 0x330044, 0x220033,
-		// Pinks / Magentas
 		0xFFCCEE, 0xFF88DD, 0xFF44CC, 0xFF00FF, 0xCC00CC, 0x990099, 0x660066, 0x440044, 0x330033,
 	};
 	private static final int PRESETS_PER_ROW = 9;
 
-	// ======== COLORS ========
 	private void buildColorsTab(int centerX, int startY) {
 		int w = 200, x = centerX - w / 2;
 
-		// 5 compact color rows: label + preview + hex field
 		boolean isTextureMode = "texture".equals(ModConfig.getRenderMode()) && !"clean".equals(ModConfig.getPlaqueStyle());
 		String bgLabel = isTextureMode ? "Tint:" : "Fill:";
 		String[] rowLabels = {"Title:", "Desc:", "Bar:", "Done:", bgLabel};
@@ -310,14 +288,13 @@ public class SimpleInstructionsConfigScreen extends Screen {
 			addCompactColorRow(x, ry, w, rowLabels[i], rowColors[i], setters[i], i);
 		}
 
-		// Shared swatch grid below color rows
 		int gridTop = startY + 5 * rowH + 6;
 		swatchGridY = gridTop;
 		int cellSize = 12;
 		int gridW = PRESETS_PER_ROW * cellSize;
 		int gridX = centerX - gridW / 2;
 		int totalRows = COLOR_PRESETS.length / PRESETS_PER_ROW;
-		int availableH = (height - 32) - gridTop; // space above Done button
+		int availableH = (height - 32) - gridTop;
 		int visibleRows = Math.min(totalRows, Math.max(3, availableH / cellSize));
 
 		for (int row = 0; row < visibleRows; row++) {
@@ -343,12 +320,10 @@ public class SimpleInstructionsConfigScreen extends Screen {
 		int previewSize = 14;
 		colorSetters[rowIndex] = onChange;
 
-		// Clickable label area (selects this row as active target)
 		addDrawableChild(ButtonWidget.builder(Text.literal(label), btn -> {
 			activeColorRow = rowIndex;
 		}).dimensions(x, y, labelWidth, 18).build());
 
-		// Hex input field
 		var field = addDrawableChild(new TextFieldWidget(
 			textRenderer, x + labelWidth + previewSize + 6, y, 60, 18, Text.literal(label)));
 		field.setMaxLength(7);
@@ -369,7 +344,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 		colorFields[rowIndex] = field;
 	}
 
-	// Draw color previews and swatch fills
 	private void renderColorPresets(DrawContext context, int startY) {
 		int x = width / 2 - 100;
 		int labelWidth = 36;
@@ -386,17 +360,14 @@ public class SimpleInstructionsConfigScreen extends Screen {
 			int px = x + labelWidth + 2;
 			int py = ry + 2;
 
-			// Active row highlight
 			if (i == activeColorRow) {
 				context.fill(x - 2, ry - 1, x + 200 + 2, ry + 19, 0x33FFFF00);
 			}
 
-			// Preview square with border
 			context.fill(px - 1, py - 1, px + previewSize + 1, py + previewSize + 1, 0xFF000000);
 			context.fill(px, py, px + previewSize, py + previewSize, 0xFF000000 | currentColors[i]);
 		}
 
-		// Swatch grid fills
 		int cellSize = 12;
 		int gridW = PRESETS_PER_ROW * cellSize;
 		int gridX = width / 2 - gridW / 2;
@@ -414,7 +385,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 			}
 		}
 
-		// Scroll indicator if needed
 		if (totalRows > visibleRows) {
 			int barX = gridX + gridW + 2;
 			int barTotalH = visibleRows * cellSize;
@@ -425,7 +395,6 @@ public class SimpleInstructionsConfigScreen extends Screen {
 		}
 	}
 
-	// ======== EFFECTS ========
 	private void buildEffectsTab(int centerX, int startY) {
 		int w = 200, x = centerX - w / 2;
 		int row = 0;
@@ -537,24 +506,20 @@ public class SimpleInstructionsConfigScreen extends Screen {
 	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
 		renderBackground(context);
 
-		// Title
 		context.drawCenteredTextWithShadow(textRenderer, title, width / 2, 15,
 			0xFFFFDD00);
 
-		// Labels
 		for (LabelInfo label : labels) {
 			context.drawTextWithShadow(textRenderer, label.text, label.x, label.y, 0xAAAAAA);
 		}
 
 		super.render(context, mouseX, mouseY, delta);
 
-		// Color preset squares MUST be drawn after super.render() so they appear on top of button backgrounds
 		if (currentTab == Tab.COLORS) {
 			renderColorPresets(context, 60);
 		}
 	}
 
-	// --- Slider widget ---
 	private static class IntSlider extends SliderWidget {
 		private final int min, max;
 		private final String prefix, suffix;
