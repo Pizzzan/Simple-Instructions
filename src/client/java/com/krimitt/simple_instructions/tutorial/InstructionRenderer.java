@@ -1,7 +1,5 @@
 package com.krimitt.simple_instructions.tutorial;
 
-import com.krimitt.simple_instructions.tutorial.ActionType;
-import com.krimitt.simple_instructions.tutorial.InstructionStep;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
@@ -50,6 +48,9 @@ public class InstructionRenderer implements HudRenderCallback {
 	public void onHudRender(DrawContext drawContext, float tickDelta) {
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (client.currentScreen instanceof PlaqueEditorScreen) return;
+		// flush any pending vanilla HUD draws (hotbar items, etc.) so plaque renders on top
+		drawContext.getVertexConsumers().draw();
+		RenderSystem.disableDepthTest();
 
 		InstructionManager mgr = InstructionManager.INSTANCE;
 		if (!mgr.isActive()) return;
@@ -72,6 +73,15 @@ public class InstructionRenderer implements HudRenderCallback {
 		float anchorX = screenWidth * overrides.resolvePositionXPercent() / 100f;
 		int x = (int) (anchorX - plaqueWidth / 2f);
 		int y = overrides.resolvePositionY();
+
+		// Auto-shift plaque upward so it clears the full bottom HUD (hotbar + hearts + XP bar)
+		int screenHeight = client.getWindow().getScaledHeight();
+		int hudTop = screenHeight - 55;
+		int renderBottom = (int) (y + BASE_HEIGHT / 2f + BASE_HEIGHT * scale / 2f);
+		if (renderBottom > hudTop) {
+			y -= (renderBottom - hudTop);
+		}
+
 		float centerX = anchorX;
 		float centerY = y + BASE_HEIGHT / 2f;
 
@@ -112,7 +122,7 @@ public class InstructionRenderer implements HudRenderCallback {
 
 		drawPlaqueContent(drawContext, textRenderer, x, y, plaqueWidth,
 				step.getTitle(), step.getDescription(), iconId,
-				mgr.getProgress(), state, opacity, overrides, step.getActionType());
+				mgr.getProgress(), state, opacity, overrides, step.getActionType(), false);
 
 		if (state == AnimationState.SLIDING_IN && ModConfig.isEnableFlash()) {
 			float flashIntensity;
@@ -134,13 +144,11 @@ public class InstructionRenderer implements HudRenderCallback {
 
 		matrices.pop();
 
-		int screenHeight = client.getWindow().getScaledHeight();
-
 		if (mgr.isTestMode()) {
 			String testLabel = "TEST MODE \u2014 Press Backspace to exit";
 			int tw = textRenderer.getWidth(testLabel);
 			int tx = screenWidth / 2 - tw / 2;
-			int ty = screenHeight - 14;
+			int ty = 2;
 			drawContext.fill(tx - 3, ty - 2, tx + tw + 3, ty + 10, 0xAA000000);
 			drawContext.drawTextWithShadow(textRenderer, testLabel, tx, ty, 0xFFFF55);
 		}
@@ -167,6 +175,7 @@ public class InstructionRenderer implements HudRenderCallback {
 		int counterX = counterScaledX + 2;
 		int counterY = counterScaledY + scaledH2 + 2;
 		drawContext.drawTextWithShadow(textRenderer, counter, counterX, counterY, 0x88AAAAAA);
+		RenderSystem.enableDepthTest();
 	}
 
 	public static void drawParchmentBackground(DrawContext ctx, int x, int y, int w, int h, float opacity, int bgColorRgb, @Nullable String style) {
@@ -292,7 +301,8 @@ public class InstructionRenderer implements HudRenderCallback {
 										  String iconId, float progress,
 										  AnimationState state, float opacity,
 										  @Nullable StepVisualOverrides overrides,
-										  @Nullable ActionType actionType) {
+										  @Nullable ActionType actionType,
+										  boolean skipText) {
 		int h = BASE_HEIGHT;
 		int alpha = Math.max(4, (int) (opacity * 255));
 		int alphaShift = alpha << 24;
@@ -346,42 +356,39 @@ public class InstructionRenderer implements HudRenderCallback {
 		Identifier fontId = resolveFontId(font);
 		Style fontStyle = Style.EMPTY.withFont(fontId);
 
-		String trimmedTitle = title;
-		String trimmedDesc = description;
-		if (textRenderer.getWidth(title) > textMaxWidth) {
-			trimmedTitle = textRenderer.trimToWidth(title, textMaxWidth - 6) + "..";
-		}
-		if (textRenderer.getWidth(description) > textMaxWidth) {
-			trimmedDesc = textRenderer.trimToWidth(description, textMaxWidth - 6) + "..";
-		}
-
-		Text titleText = Text.literal(trimmedTitle).setStyle(fontStyle);
-		Text descText = Text.literal(trimmedDesc).setStyle(fontStyle);
-
-		if (shadow) {
-			ctx.drawCenteredTextWithShadow(textRenderer, titleText, textCenterX, y + 8, titleColor);
-			ctx.drawCenteredTextWithShadow(textRenderer, descText, textCenterX, y + 21, descColor);
-		} else {
-			int titleW = textRenderer.getWidth(titleText);
-			int descW = textRenderer.getWidth(descText);
-			ctx.drawText(textRenderer, titleText, textCenterX - titleW / 2, y + 8, titleColor, false);
-			ctx.drawText(textRenderer, descText, textCenterX - descW / 2, y + 21, descColor, false);
-		}
-
 		int barX = x + (hasIcon ? iconOffset : 6);
 		int barY = y + h - PROGRESS_BAR_HEIGHT - 4;
 		int barMaxWidth = w - (hasIcon ? iconOffset : 6) - 6;
 
-		if (actionType == ActionType.DISMISS) {
-			String hintStr = "Click to continue";
-			if (textRenderer.getWidth(hintStr) > textMaxWidth) {
-				hintStr = textRenderer.trimToWidth(hintStr, textMaxWidth - 6) + "..";
+		if (!skipText) {
+			String trimmedTitle = title;
+			String trimmedDesc = description;
+			if (textRenderer.getWidth(title) > textMaxWidth)
+				trimmedTitle = textRenderer.trimToWidth(title, textMaxWidth - 6) + "..";
+			if (textRenderer.getWidth(description) > textMaxWidth)
+				trimmedDesc = textRenderer.trimToWidth(description, textMaxWidth - 6) + "..";
+
+			Text titleText = Text.literal(trimmedTitle).setStyle(fontStyle);
+			Text descText = Text.literal(trimmedDesc).setStyle(fontStyle);
+
+			if (shadow) {
+				ctx.drawCenteredTextWithShadow(textRenderer, titleText, textCenterX, y + 8, titleColor);
+				ctx.drawCenteredTextWithShadow(textRenderer, descText, textCenterX, y + 21, descColor);
+			} else {
+				ctx.drawText(textRenderer, titleText, textCenterX - textRenderer.getWidth(titleText) / 2, y + 8, titleColor, false);
+				ctx.drawText(textRenderer, descText, textCenterX - textRenderer.getWidth(descText) / 2, y + 21, descColor, false);
 			}
-			Text hintText = Text.literal(hintStr).setStyle(fontStyle);
-			int hintW = textRenderer.getWidth(hintText);
-			int hintX = Math.max(textAreaLeft, textCenterX - hintW / 2);
-			int hintColor = (descColorRgb | alphaShift) & 0x88FFFFFF;
-			ctx.drawText(textRenderer, hintText, hintX, barY - 2, hintColor, shadow);
+		}
+
+		if (actionType == ActionType.DISMISS) {
+			if (!skipText) {
+				String hintStr = "Click to continue";
+				if (textRenderer.getWidth(hintStr) > textMaxWidth)
+					hintStr = textRenderer.trimToWidth(hintStr, textMaxWidth - 6) + "..";
+				Text hintText = Text.literal(hintStr).setStyle(fontStyle);
+				int hintX = Math.max(textAreaLeft, textCenterX - textRenderer.getWidth(hintText) / 2);
+				ctx.drawText(textRenderer, hintText, hintX, barY - 2, (descColorRgb | alphaShift) & 0x88FFFFFF, shadow);
+			}
 		} else {
 			int barBgAlpha = Math.max(4, (int) (opacity * 0x88));
 			ctx.fill(barX, barY, barX + barMaxWidth, barY + PROGRESS_BAR_HEIGHT,

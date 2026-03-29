@@ -30,7 +30,7 @@ public class PlaqueEditorScreen extends Screen {
 	private static final int MIN_WIDTH = 160;
 	private static final int MAX_WIDTH = 320;
 
-	private int leftW, rightW, centerX1, centerX2, panelTop, panelBottom;
+	private int leftW, rightW, centerX1, centerX2, panelTop, panelBottom, ctrlY;
 
 	private static final String[] ICON_ITEMS = {
 		"minecraft:book", "minecraft:compass", "minecraft:map", "minecraft:clock",
@@ -128,6 +128,7 @@ public class PlaqueEditorScreen extends Screen {
 		centerX2 = width - rightW;
 		panelTop = 18;
 		panelBottom = height - 28;
+		ctrlY = panelBottom - 24;
 		int bottomBarY = height - 24;
 
 		int btnY = panelBottom - 16;
@@ -181,7 +182,7 @@ public class PlaqueEditorScreen extends Screen {
 			titleField.setText(selected.getTitle());
 			titleField.setChangedListener(t -> {
 				InstructionStep s = getSelectedStep();
-				if (s != null && !t.trim().isEmpty()) { s.setTitle(t.trim()); ModConfig.save(); }
+				if (s != null) { s.setTitle(t); ModConfig.save(); }
 			});
 			ry += rowH;
 
@@ -192,7 +193,7 @@ public class PlaqueEditorScreen extends Screen {
 			descField.setText(selected.getDescription());
 			descField.setChangedListener(t -> {
 				InstructionStep s = getSelectedStep();
-				if (s != null && !t.trim().isEmpty()) { s.setDescription(t.trim()); ModConfig.save(); }
+				if (s != null) { s.setDescription(t); ModConfig.save(); }
 			});
 			ry += rowH;
 
@@ -362,13 +363,10 @@ public class PlaqueEditorScreen extends Screen {
 		List<InstructionStep> steps = ModConfig.getSteps();
 		InstructionStep selected = getSelectedStep();
 
-		//plaque renders first so panels draw on top; during drag, panels are skipped
+		//plaque renders first (background unclipped, text scissored to center)
 		if (!iconPickerOpen && selected != null) {
 			renderPlaquePreview(ctx, tr, mouseX, mouseY, selected);
 		}
-
-		//flush batched text so panel fills draw on top
-		ctx.getVertexConsumers().draw();
 
 		if (isDragging) {
 			return;
@@ -471,21 +469,25 @@ public class PlaqueEditorScreen extends Screen {
 
 		updateHoverState(mouseX, mouseY, scaledX, scaledY, scaledW, scaledH);
 
-		ctx.getMatrices().push();
-		float centerX = anchorX;
-		float centerY = py + PLAQUE_HEIGHT / 2f;
-		ctx.getMatrices().translate(centerX, centerY, 0);
-		ctx.getMatrices().scale(scale, scale, 1f);
-		ctx.getMatrices().translate(-centerX, -centerY, 0);
-
 		String iconId = ModConfig.isShowIcon()
 			? (selectedStep.getIcon() != null ? selectedStep.getIcon() : ModConfig.getDefaultIconItem())
 			: null;
 		StepVisualOverrides overrides = ModConfig.getOverridesForStep(selectedStep.getId());
+		float centerX = anchorX;
+		float centerY = py + PLAQUE_HEIGHT / 2f;
+
+		net.minecraft.client.util.Window window = client.getWindow();
+		double sf = window.getScaleFactor();
+		boolean isDragging = dragging || activeDragHandle >= 0;
+
+		// Phase 1: background + icon + bar — no scissor, background may show over editor controls (intentional)
+		ctx.getMatrices().push();
+		ctx.getMatrices().translate(centerX, centerY, 0);
+		ctx.getMatrices().scale(scale, scale, 1f);
+		ctx.getMatrices().translate(-centerX, -centerY, 0);
 		InstructionRenderer.drawPlaqueContent(ctx, tr, px, py, plaqueWidth,
 			selectedStep.getTitle(), selectedStep.getDescription(), iconId,
-			0.6f, AnimationState.WAITING, 1.0f, overrides, selectedStep.getActionType());
-
+			0.6f, AnimationState.WAITING, 1.0f, overrides, selectedStep.getActionType(), true);
 		if (hoveringRegion >= 0 && !contextMenuOpen && !dragging && activeDragHandle < 0) {
 			int ioOff = (iconId != null) ? 28 : 0;
 			int textL = px + ioOff + 4;
@@ -498,8 +500,29 @@ public class PlaqueEditorScreen extends Screen {
 			}
 			ctx.fill(hx1, hy1, hx2, hy2, 0x33FFFFFF);
 		}
-
 		ctx.getMatrices().pop();
+		ctx.getVertexConsumers().draw(); // flush background to GPU before panel fills are queued
+
+		// Phase 2: text only — scissored to center column + safe vertical zone
+		if (!isDragging) {
+			int sX = (int)(centerX1 * sf);
+			int sW = (int)((centerX2 - centerX1) * sf);
+			int sH = (int)((ctrlY - panelTop) * sf);
+			int sBottom = window.getHeight() - (int)(ctrlY * sf);
+			RenderSystem.enableScissor(sX, sBottom, sW, sH);
+		}
+		ctx.getMatrices().push();
+		ctx.getMatrices().translate(centerX, centerY, 0);
+		ctx.getMatrices().scale(scale, scale, 1f);
+		ctx.getMatrices().translate(-centerX, -centerY, 0);
+		InstructionRenderer.drawPlaqueContent(ctx, tr, px, py, plaqueWidth,
+			selectedStep.getTitle(), selectedStep.getDescription(), iconId,
+			0.6f, AnimationState.WAITING, 1.0f, overrides, selectedStep.getActionType(), false);
+		ctx.getMatrices().pop();
+		ctx.getVertexConsumers().draw();
+		if (!isDragging) {
+			RenderSystem.disableScissor();
+		}
 
 		if (hoveringPlaque || dragging || activeDragHandle >= 0 || hoveringHandle >= 0) {
 			drawHandles(ctx, scaledX, scaledY, scaledW, scaledH);
